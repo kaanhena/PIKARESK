@@ -1,10 +1,23 @@
-export function Header(root, { title, onLogout } = {}) {
+export function Header(root, { title = "PIKARESK", onLogout } = {}) {
   root.innerHTML = `
-    <div class="header-inner">
-      <div class="brand" aria-label="Uygulama adı">${title ?? 'PİKAREKS'}</div>
-      <button class="btn" type="button" id="logoutBtn">Çıkış Yap</button>
-    </div>
+    <header class="app-header">
+      <div class="brand">${title}</div>
+
+      <div class="header-center"></div>
+
+      <div class="header-right">
+        <div class="user-chip">
+          <div class="avatar-placeholder"></div>
+          <span>Kullanıcı</span>
+        </div>
+
+        <button class="icon-btn" aria-label="Bildirimler">🔔</button>
+
+        <button class="btn btn-ghost" id="logoutBtn">Çıkış Yap</button>
+      </div>
+    </header>
   `;
-  const btn = root.querySelector('#logoutBtn');
-  btn?.addEventListener('click', () => onLogout?.());
+
+  const btn = root.querySelector("#logoutBtn");
+  btn?.addEventListener("click", () => onLogout?.());
 }
