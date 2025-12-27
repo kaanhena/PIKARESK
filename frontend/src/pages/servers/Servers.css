@@ -1,0 +1,10 @@
+.servers-page {
+  background: #0f172a;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.servers-page h1 {
+  font-size: 24px;
+  color: #f8fafc;
+}
