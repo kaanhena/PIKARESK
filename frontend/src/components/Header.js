@@ -25,9 +25,9 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
         </button>
 
         <div class="user-profile" role="button" tabindex="0">
-          <span class="user-name">Kullanici</span>
+          <span class="user-name" data-user-name>Kullanici</span>
           <div class="user-avatar">
-            K
+            <span data-user-initial>K</span>
             <span class="status-indicator" aria-hidden="true"></span>
           </div>
         </div>

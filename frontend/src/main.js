@@ -42,6 +42,17 @@ Header(headerRoot, {
   }
 });
 
+function updateHeaderUser(user) {
+  const nameEl = headerRoot.querySelector("[data-user-name]");
+  const initialEl = headerRoot.querySelector("[data-user-initial]");
+  if (!nameEl || !initialEl) return;
+  const displayName = user?.displayName?.trim();
+  const email = user?.email?.trim();
+  const label = displayName || email || "Kullanici";
+  nameEl.textContent = label;
+  initialEl.textContent = label[0]?.toUpperCase() || "K";
+}
+
 /* RENDER */
 function renderPage(key) {
   const isAuthed = localStorage.getItem(AUTH_KEY) === "1";
@@ -76,6 +87,7 @@ window.PIKARESK = {
 watchAuth((user) => {
   if (user) {
     localStorage.setItem(AUTH_KEY, "1");
+    updateHeaderUser(user);
     if (currentRoute === "login" || currentRoute === "register") {
       renderPage("home");
       return;
@@ -84,6 +96,7 @@ watchAuth((user) => {
     return;
   }
   localStorage.removeItem(AUTH_KEY);
+  updateHeaderUser(null);
   if (currentRoute !== "login" && currentRoute !== "register") {
     renderPage("login");
   }
