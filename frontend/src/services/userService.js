@@ -1,6 +1,13 @@
 // src/services/userService.js
 import { db } from "../firebase";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getCountFromServer,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 
 export async function ensureUserProfile(user) {
   const ref = doc(db, "users", user.uid);
@@ -16,4 +23,10 @@ export async function ensureUserProfile(user) {
   }
 
   return ref;
+}
+
+export async function fetchUserCount() {
+  const usersRef = collection(db, "users");
+  const snapshot = await getCountFromServer(usersRef);
+  return snapshot.data().count;
 }

@@ -1,9 +1,10 @@
 // src/pages/Home.js
 import "./Home.css";
+import { fetchUserCount } from "../services/userService.js";
 
 export function Home(root) {
-  const userCount = getUserCount();
-  const formattedUserCount = formatNumber(userCount);
+  const fallbackCount = getUserCount();
+  const formattedUserCount = formatNumber(fallbackCount);
 
   root.innerHTML = `
     <section class="home-content">
@@ -36,7 +37,7 @@ export function Home(root) {
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-icon">👥</div>
-            <div class="stat-value">${formattedUserCount}</div>
+            <div class="stat-value" data-stat="user-count">${formattedUserCount}</div>
             <div class="stat-label">Mutlu Kullanici</div>
           </div>
           <div class="stat-card">
@@ -140,6 +141,18 @@ export function Home(root) {
   marketBtn?.addEventListener("click", () => {
     window.PIKARESK?.go?.("market");
   });
+
+  const countEl = root.querySelector('[data-stat="user-count"]');
+  if (countEl) {
+    fetchUserCount()
+      .then((count) => {
+        countEl.textContent = formatNumber(count);
+        localStorage.setItem("pikaresk_user_count", String(count));
+      })
+      .catch(() => {
+        countEl.textContent = formattedUserCount;
+      });
+  }
 }
 
 function getUserCount() {
@@ -148,7 +161,7 @@ function getUserCount() {
   if (Number.isFinite(parsed) && parsed >= 0) {
     return parsed;
   }
-  return 50000;
+  return 0;
 }
 
 function formatNumber(value) {
@@ -158,3 +171,4 @@ function formatNumber(value) {
     return String(value);
   }
 }
+
