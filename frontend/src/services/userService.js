@@ -12,14 +12,31 @@ import {
 export async function ensureUserProfile(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
+  const displayName = user.displayName || "";
+  const email = user.email || "";
+  const profilePayload = {
+    uid: user.uid,
+    email,
+    displayName,
+    emailLower: email.toLowerCase(),
+    displayNameLower: displayName.toLowerCase(),
+  };
 
   if (!snap.exists()) {
     await setDoc(ref, {
-      uid: user.uid,
-      email: user.email || "",
-      displayName: user.displayName || "",
+      ...profilePayload,
       createdAt: serverTimestamp(),
     });
+  } else {
+    const data = snap.data() || {};
+    const needsLower =
+      !data.emailLower ||
+      !data.displayNameLower ||
+      data.emailLower !== profilePayload.emailLower ||
+      data.displayNameLower !== profilePayload.displayNameLower;
+    if (needsLower) {
+      await setDoc(ref, profilePayload, { merge: true });
+    }
   }
 
   return ref;

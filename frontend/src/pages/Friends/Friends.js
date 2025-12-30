@@ -1,40 +1,57 @@
-﻿export function Friends(root) {
-  const STORAGE_KEY = 'pikaresk_friends';
+import {
+  fetchFriendRequests,
+  findUserByIdentity,
+  removeFriendRequest,
+  sendFriendRequest,
+  updateFriendRequest,
+} from "../../services/friendService.js";
+import { createNotification } from "../../services/notificationService.js";
+import { watchAuth } from "../../services/authService.js";
+
+export function Friends(root) {
   const statusText = {
-    online: '🟢 Çevrimiçi',
-    pending: '⏳ Bekliyor',
-    blocked: '🚫 Engellenmiş'
+    online: "Arkadas",
+    pending: "Istek",
+    outgoing: "Gonderildi",
+    blocked: "Engellendi",
   };
-
-  const defaultFriends = [
-    { id: 'ayse', name: 'Ayşe Yılmaz', status: 'online' },
-    { id: 'mehmet', name: 'Mehmet Kaya', status: 'online' },
-    { id: 'selin', name: 'Selin Özkan', status: 'pending' },
-    { id: 'blocked-user', name: 'Engellenen Kullanıcı', status: 'blocked' }
-  ];
-
-  function loadFriends() {
-    try {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      if (!Array.isArray(data) || data.length === 0) throw new Error('empty');
-      return data;
-    } catch {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultFriends));
-      return [...defaultFriends];
-    }
-  }
-
-  function saveFriends(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  }
 
   const state = {
-    friends: loadFriends(),
-    filter: 'all',
-    search: ''
+    friends: [],
+    filter: "all",
+    search: "",
   };
 
-  root.innerHTML = `
+  let currentUser = null;
+  let uiReady = false;
+  let gridEl = null;
+  let emptyEl = null;
+  let searchEl = null;
+  let addBtn = null;
+  let tabs = [];
+  let profileModal = null;
+  let profileName = null;
+  let profileStatus = null;
+  let closeProfileBtn = null;
+
+  function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast-notification show";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.remove("show"), 1600);
+    setTimeout(() => toast.remove(), 2000);
+  }
+
+  function normalizeText(text) {
+    return (text || "").toLowerCase().trim();
+  }
+
+  function initUI() {
+    if (uiReady) return;
+    uiReady = true;
+
+    root.innerHTML = `
   <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
@@ -42,8 +59,7 @@
   .animated-bg{position:fixed;inset:0;pointer-events:none;
     background:
       radial-gradient(circle at 30% 40%,rgba(255,0,230,.1),transparent 50%),
-      radial-gradient(circle at 70% 70%,rgba(0,255,255,.1),transparent 50%)
-  }
+      radial-gradient(circle at 70% 70%,rgba(0,255,255,.1),transparent 50%)}
   .friends-container{position:relative;z-index:2;height:100%;
     display:flex;flex-direction:column;gap:20px;padding:24px}
   .page-header{display:flex;justify-content:flex-start;align-items:center;gap:24px;
@@ -132,15 +148,15 @@
   <div class="friends-container">
     <header class="page-header">
       <div class="header-left">
-        <div class="page-icon">👥</div>
+        <div class="page-icon">??</div>
         <div>
-          <h2>Arkadaşlar</h2>
-          <p style="opacity:.6;font-size:14px">Arkadaşlarını yönet</p>
+          <h2>Arkadaslar</h2>
+          <p style="opacity:.6;font-size:14px">Arkadaslarini yonet</p>
         </div>
       </div>
       <div class="header-actions">
         <div class="search-group">
-          <input class="search-input" id="friendSearch" placeholder="Kullanıcı adı yaz">
+          <input class="search-input" id="friendSearch" placeholder="Kullanici adi veya e-posta">
           <button class="add-friend-btn" id="addFriendBtn">+</button>
         </div>
       </div>
@@ -148,13 +164,13 @@
 
     <nav class="filter-tabs">
       <button class="filter-tab active" data-filter="all">
-        Tümü <span class="tab-count" id="c-all"></span>
+        Tumu <span class="tab-count" id="c-all"></span>
       </button>
       <button class="filter-tab" data-filter="online">
-        Çevrimiçi <span class="tab-count" id="c-online"></span>
+        Arkadaslar <span class="tab-count" id="c-online"></span>
       </button>
       <button class="filter-tab" data-filter="pending">
-        İstekler <span class="tab-count" id="c-pending"></span>
+        Istekler <span class="tab-count" id="c-pending"></span>
       </button>
       <button class="filter-tab" data-filter="blocked">
         Engellenen <span class="tab-count" id="c-blocked"></span>
@@ -163,7 +179,7 @@
 
     <main class="friends-content">
       <div class="friends-grid" id="friendsGrid"></div>
-      <div class="empty-state" id="emptyState" style="display:none;">Sonuç bulunamadı.</div>
+      <div class="empty-state" id="emptyState" style="display:none;">Sonuc bulunamadi.</div>
     </main>
   </div>
 
@@ -178,56 +194,138 @@
   </div>
   `;
 
-  const gridEl = root.querySelector('#friendsGrid');
-  const emptyEl = root.querySelector('#emptyState');
-  const searchEl = root.querySelector('#friendSearch');
-  const addBtn = root.querySelector('#addFriendBtn');
-  const tabs = root.querySelectorAll('.filter-tab');
-  const profileModal = root.querySelector('#profileModal');
-  const profileName = root.querySelector('#profileName');
-  const profileStatus = root.querySelector('#profileStatus');
-  const closeProfileBtn = root.querySelector('#closeProfileBtn');
+    gridEl = root.querySelector("#friendsGrid");
+    emptyEl = root.querySelector("#emptyState");
+    searchEl = root.querySelector("#friendSearch");
+    addBtn = root.querySelector("#addFriendBtn");
+    tabs = Array.from(root.querySelectorAll(".filter-tab"));
+    profileModal = root.querySelector("#profileModal");
+    profileName = root.querySelector("#profileName");
+    profileStatus = root.querySelector("#profileStatus");
+    closeProfileBtn = root.querySelector("#closeProfileBtn");
 
-  function normalizeText(text) {
-    return (text || '').toLowerCase().trim();
+    const seededSearch = localStorage.getItem("pikaresk_friends_search");
+    if (seededSearch) {
+      searchEl.value = seededSearch;
+      state.search = seededSearch;
+      localStorage.removeItem("pikaresk_friends_search");
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        tabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        state.filter = tab.dataset.filter || "all";
+        renderList();
+      });
+    });
+
+    searchEl.addEventListener("input", () => {
+      state.search = searchEl.value;
+      renderList();
+    });
+
+    addBtn.addEventListener("click", async () => {
+      const name = searchEl.value.trim();
+      if (!name) return;
+      if (!currentUser) {
+        showToast("Giris yapmalisin.");
+        return;
+      }
+      const target = await findUserByIdentity(name);
+      if (!target) {
+        showToast("Kullanici bulunamadi.");
+        return;
+      }
+      if (target.id === currentUser.uid) {
+        showToast("Kendini ekleyemezsin.");
+        return;
+      }
+      const result = await sendFriendRequest(currentUser, target);
+      if (result.status !== "pending") {
+        showToast("Bu kullanici zaten listende.");
+      } else {
+        showToast("Arkadas istegi gonderildi.");
+      }
+      await refreshFriends();
+    });
+
+    gridEl.addEventListener("click", (event) => {
+      const menuBtn = event.target.closest(".card-menu");
+      if (menuBtn) {
+        event.stopPropagation();
+        const menu = menuBtn.nextElementSibling;
+        const open = menu.style.display === "flex";
+        root.querySelectorAll(".menu-dropdown").forEach((m) => {
+          m.style.display = "none";
+        });
+        menu.style.display = open ? "none" : "flex";
+        return;
+      }
+
+      const actionBtn = event.target.closest("[data-action]");
+      if (!actionBtn) return;
+      const card = event.target.closest(".friend-card");
+      if (!card) return;
+      const friend = state.friends.find((f) => f.id === card.dataset.id);
+      handleAction(actionBtn.dataset.action, friend);
+    });
+
+    document.addEventListener("click", () => {
+      root.querySelectorAll(".menu-dropdown").forEach((m) => {
+        m.style.display = "none";
+      });
+    });
+
+    profileModal.addEventListener("click", (event) => {
+      if (event.target === profileModal) closeProfile();
+    });
+
+    closeProfileBtn.addEventListener("click", closeProfile);
   }
 
   function buildMenu(friend) {
-    if (friend.status === 'blocked') {
+    if (friend.status === "blocked") {
       return `
         <button data-action="profile">Profil</button>
-        <button data-action="unblock">Engeli Kaldır</button>
-        <button data-action="remove">Arkadaşlıktan Çıkart</button>
+        <button data-action="unblock">Engeli Kaldir</button>
+        <button data-action="remove">Arkadasliktan Cikar</button>
       `;
     }
-    if (friend.status === 'pending') {
+    if (friend.status === "pending" && !friend.isOutgoing) {
       return `
         <button data-action="profile">Profil</button>
         <button data-action="accept">Kabul</button>
         <button data-action="reject">Reddet</button>
         <button data-action="block">Engelle</button>
-        <button data-action="remove">Arkadaşlıktan Çıkart</button>
+      `;
+    }
+    if (friend.status === "outgoing") {
+      return `
+        <button data-action="profile">Profil</button>
+        <button data-action="cancel">Iptal Et</button>
       `;
     }
     return `
       <button data-action="profile">Profil</button>
       <button data-action="dm">Mesaj</button>
       <button data-action="block">Engelle</button>
-      <button data-action="remove">Arkadaşlıktan Çıkart</button>
+      <button data-action="remove">Arkadasliktan Cikar</button>
     `;
   }
 
   function buildActions(friend) {
-    if (friend.status === 'blocked') {
-      return `
-        <button class="action-button primary" data-action="unblock">Engeli Kaldır</button>
-      `;
+    if (friend.status === "blocked") {
+      return `<button class="action-button primary" data-action="unblock">Engeli Kaldir</button>`;
     }
-    if (friend.status === 'pending') {
+    if (friend.status === "pending" && !friend.isOutgoing) {
       return `
         <button class="action-button primary" data-action="accept">Kabul</button>
         <button class="action-button danger" data-action="reject">Reddet</button>
       `;
+    }
+    if (friend.status === "outgoing") {
+      return `<button class="action-button danger" data-action="cancel">Iptal Et</button>`;
     }
     return `
       <button class="action-button primary" data-action="dm">Mesaj</button>
@@ -236,16 +334,26 @@
   }
 
   function renderCounts() {
-    root.querySelector('#c-all').textContent = state.friends.length;
-    root.querySelector('#c-online').textContent = state.friends.filter(f => f.status === 'online').length;
-    root.querySelector('#c-pending').textContent = state.friends.filter(f => f.status === 'pending').length;
-    root.querySelector('#c-blocked').textContent = state.friends.filter(f => f.status === 'blocked').length;
+    const countPending = state.friends.filter(
+      (f) => f.status === "pending" || f.status === "outgoing"
+    ).length;
+    root.querySelector("#c-all").textContent = state.friends.length;
+    root.querySelector("#c-online").textContent = state.friends.filter(
+      (f) => f.status === "online"
+    ).length;
+    root.querySelector("#c-pending").textContent = countPending;
+    root.querySelector("#c-blocked").textContent = state.friends.filter(
+      (f) => f.status === "blocked"
+    ).length;
   }
 
   function getFiltered() {
     const search = normalizeText(state.search);
-    return state.friends.filter(friend => {
-      const matchesFilter = state.filter === 'all' || friend.status === state.filter;
+    return state.friends.filter((friend) => {
+      const matchesFilter =
+        state.filter === "all" ||
+        friend.status === state.filter ||
+        (state.filter === "pending" && friend.status === "outgoing");
       const matchesSearch = !search || normalizeText(friend.name).includes(search);
       return matchesFilter && matchesSearch;
     });
@@ -253,9 +361,11 @@
 
   function renderList() {
     const list = getFiltered();
-    gridEl.innerHTML = list.map(friend => `
+    gridEl.innerHTML = list
+      .map(
+        (friend) => `
       <div class="friend-card" data-id="${friend.id}" data-status="${friend.status}">
-        <button class="card-menu">⋮</button>
+        <button class="card-menu">?</button>
         <div class="menu-dropdown">
           ${buildMenu(friend)}
         </div>
@@ -265,136 +375,102 @@
           ${buildActions(friend)}
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
 
-    emptyEl.style.display = list.length === 0 ? 'block' : 'none';
-  }
-
-  function updateFriend(id, updates) {
-    const idx = state.friends.findIndex(f => f.id === id);
-    if (idx === -1) return null;
-    state.friends[idx] = { ...state.friends[idx], ...updates };
-    saveFriends(state.friends);
-    return state.friends[idx];
-  }
-
-  function removeFriend(id) {
-    state.friends = state.friends.filter(f => f.id !== id);
-    saveFriends(state.friends);
+    emptyEl.style.display = list.length === 0 ? "block" : "none";
   }
 
   function openProfile(friend) {
     profileName.textContent = friend.name;
-    profileStatus.textContent = statusText[friend.status] || friend.status;
-    profileModal.classList.add('active');
+    const email = friend.email ? ` - ${friend.email}` : "";
+    profileStatus.textContent = `${statusText[friend.status] || friend.status}${email}`;
+    profileModal.classList.add("active");
   }
 
   function closeProfile() {
-    profileModal.classList.remove('active');
+    profileModal.classList.remove("active");
   }
 
-  function handleAction(action, friend) {
+  async function handleAction(action, friend) {
     if (!friend) return;
 
-    if (action === 'profile') {
+    if (action === "profile") {
       openProfile(friend);
       return;
     }
 
-    if (action === 'dm') {
-      if (friend.status === 'blocked') return;
-      localStorage.setItem('pikaresk_active_dm', friend.id);
-      localStorage.setItem('pikaresk_active_dm_name', friend.name);
-      window.PIKARESK?.go?.('dm');
+    if (action === "dm") {
+      if (friend.status === "blocked") return;
+      localStorage.setItem("pikaresk_active_dm", friend.id);
+      localStorage.setItem("pikaresk_active_dm_name", friend.name);
+      window.PIKARESK?.go?.("dm");
       return;
     }
 
-    if (action === 'block') {
-      updateFriend(friend.id, { status: 'blocked' });
+    if (action === "accept") {
+      await updateFriendRequest(friend.requestId, { status: "accepted" });
+      if (currentUser) {
+        try {
+          await createNotification({
+            toUid: friend.id,
+            type: "friend_accept",
+            title: "Arkadaslik kabul edildi",
+            body: `${currentUser.displayName || currentUser.email || "Bir kullanici"} istegini kabul etti.`,
+            meta: { fromUid: currentUser.uid },
+          });
+        } catch {
+          // ignore notification errors
+        }
+      }
     }
 
-    if (action === 'unblock') {
-      updateFriend(friend.id, { status: 'online' });
+    if (action === "reject" || action === "remove" || action === "cancel") {
+      await removeFriendRequest(friend.requestId);
     }
 
-    if (action === 'accept') {
-      updateFriend(friend.id, { status: 'online' });
+    if (action === "block") {
+      await updateFriendRequest(friend.requestId, { status: "blocked" });
     }
 
-    if (action === 'reject') {
-      removeFriend(friend.id);
+    if (action === "unblock") {
+      await updateFriendRequest(friend.requestId, { status: "accepted" });
     }
 
-    if (action === 'remove') {
-      removeFriend(friend.id);
-    }
+    await refreshFriends();
+  }
 
+  async function refreshFriends() {
+    if (!currentUser) return;
+    const requests = await fetchFriendRequests(currentUser.uid);
+    state.friends = requests.map((request) => {
+      const isOutgoing = request.fromUid === currentUser.uid;
+      const name = isOutgoing ? request.toName : request.fromName;
+      const email = isOutgoing ? request.toEmail : request.fromEmail;
+      let status = request.status || "pending";
+      if (status === "pending" && isOutgoing) status = "outgoing";
+      if (status === "accepted") status = "online";
+      return {
+        id: isOutgoing ? request.toUid : request.fromUid,
+        name: name || email || "Kullanici",
+        email: email || "",
+        status,
+        requestId: request.id,
+        isOutgoing,
+      };
+    });
     renderCounts();
     renderList();
   }
 
-  renderCounts();
-  renderList();
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      state.filter = tab.dataset.filter || 'all';
-      renderList();
-    });
-  });
-
-  searchEl.addEventListener('input', () => {
-    state.search = searchEl.value;
-    renderList();
-  });
-
-  addBtn.addEventListener('click', () => {
-    const name = searchEl.value.trim();
-    if (!name) return;
-    const id = normalizeText(name).replace(/[^a-z0-9]/g, '');
-    if (!id) return;
-    const existing = state.friends.find(f => f.id === id);
-    if (existing) {
-      state.filter = 'all';
-      tabs.forEach(t => t.classList.remove('active'));
-      tabs[0].classList.add('active');
-      renderList();
+  watchAuth((user) => {
+    currentUser = user;
+    if (!user) {
+      root.innerHTML = `<div class="empty-state">Giris yapman gerekiyor.</div>`;
       return;
     }
-    state.friends.push({ id, name, status: 'pending' });
-    saveFriends(state.friends);
-    renderCounts();
-    renderList();
+    initUI();
+    refreshFriends();
   });
-
-  gridEl.addEventListener('click', (e) => {
-    const menuBtn = e.target.closest('.card-menu');
-    if (menuBtn) {
-      e.stopPropagation();
-      const menu = menuBtn.nextElementSibling;
-      const open = menu.style.display === 'flex';
-      root.querySelectorAll('.menu-dropdown').forEach(m => { m.style.display = 'none'; });
-      menu.style.display = open ? 'none' : 'flex';
-      return;
-    }
-
-    const actionBtn = e.target.closest('[data-action]');
-    if (!actionBtn) return;
-    const card = e.target.closest('.friend-card');
-    if (!card) return;
-    const friend = state.friends.find(f => f.id === card.dataset.id);
-    handleAction(actionBtn.dataset.action, friend);
-  });
-
-  document.addEventListener('click', () => {
-    root.querySelectorAll('.menu-dropdown').forEach(m => { m.style.display = 'none'; });
-  });
-
-  profileModal.addEventListener('click', (e) => {
-    if (e.target === profileModal) closeProfile();
-  });
-
-  closeProfileBtn.addEventListener('click', closeProfile);
 }

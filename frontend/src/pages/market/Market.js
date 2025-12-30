@@ -542,6 +542,15 @@ export function Market(root) {
   let cartItems = loadCartItems();
   let activeProduct = null;
 
+  function activateSection(sectionId) {
+    menuItems.forEach((item) => {
+      item.classList.toggle("active", item.getAttribute("data-section") === sectionId);
+    });
+    contentSections.forEach((section) => {
+      section.style.display = section.id === sectionId ? "block" : "none";
+    });
+  }
+
   function updateCartUI() {
     cartBadge.textContent = String(getCartCount(cartItems));
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -617,11 +626,7 @@ export function Market(root) {
   menuItems.forEach((item) => {
     item.addEventListener("click", () => {
       const section = item.getAttribute("data-section");
-      menuItems.forEach((i) => i.classList.remove("active"));
-      item.classList.add("active");
-      contentSections.forEach((s) => {
-        s.style.display = s.id === section ? "block" : "none";
-      });
+      activateSection(section);
     });
   });
 
@@ -756,4 +761,22 @@ export function Market(root) {
   });
 
   updateCartUI();
+
+  const focusName = localStorage.getItem("pikaresk_market_focus");
+  if (focusName) {
+    localStorage.removeItem("pikaresk_market_focus");
+    const cards = Array.from(root.querySelectorAll(".product-card"));
+    const target = cards.find(
+      (card) => card.querySelector(".product-name")?.textContent?.trim() === focusName
+    );
+    if (target) {
+      const section = target.closest(".market-content-section");
+      if (section) {
+        activateSection(section.id);
+      }
+      target.classList.add("is-highlighted");
+      openProductModal(buildProductFromCard(target));
+      setTimeout(() => target.classList.remove("is-highlighted"), 2000);
+    }
+  }
 }

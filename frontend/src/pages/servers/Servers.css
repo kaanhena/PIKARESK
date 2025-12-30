@@ -543,3 +543,46 @@
   display: none;
 }
 
+.servers-empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.servers-empty-card {
+  max-width: 420px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 32px;
+  color: #e2e8f0;
+}
+
+.servers-empty-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(14, 165, 233, 0.35));
+}
+
+.servers-empty-card p {
+  margin: 10px 0 20px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.servers-empty-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  cursor: not-allowed;
+}
+

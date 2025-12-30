@@ -64,9 +64,18 @@ function renderPage(key) {
   const isAuthPage = targetKey === "login" || targetKey === "register";
   headerRoot.style.display = isAuthPage ? "none" : "";
   sidebarRoot.style.display = isAuthPage ? "none" : "";
+  appRoot.classList.toggle("has-header", !isAuthPage);
 
   pageRoot.innerHTML = "";
+  pageRoot.scrollTop = 0;
+  window.scrollTo(0, 0);
   route.page(pageRoot);
+
+  const searchPanel = document.getElementById("headerSearchPanel");
+  if (searchPanel) {
+    searchPanel.classList.remove("is-open");
+    searchPanel.setAttribute("aria-hidden", "true");
+  }
 
   if (!isAuthPage) {
     Sidebar(sidebarRoot, {
