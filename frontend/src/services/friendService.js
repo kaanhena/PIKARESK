@@ -28,7 +28,16 @@ export async function findUserByIdentity(input) {
   const byEmail = query(usersRef, where("emailLower", "==", term), limit(1));
   const byName = query(usersRef, where("displayNameLower", "==", term), limit(1));
   const [emailSnap, nameSnap] = await Promise.all([getDocs(byEmail), getDocs(byName)]);
-  const docSnap = emailSnap.docs[0] || nameSnap.docs[0];
+  let docSnap = emailSnap.docs[0] || nameSnap.docs[0];
+  if (!docSnap) {
+    const fallbackEmail = query(usersRef, where("email", "==", input.trim()), limit(1));
+    const fallbackName = query(usersRef, where("displayName", "==", input.trim()), limit(1));
+    const [fallbackEmailSnap, fallbackNameSnap] = await Promise.all([
+      getDocs(fallbackEmail),
+      getDocs(fallbackName),
+    ]);
+    docSnap = fallbackEmailSnap.docs[0] || fallbackNameSnap.docs[0];
+  }
   if (!docSnap) return null;
   return { id: docSnap.id, ...docSnap.data() };
 }

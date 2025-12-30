@@ -1,6 +1,8 @@
 import "./dm.css";
 import { watchAuth } from "../../services/authService.js";
 import { fetchAcceptedFriends } from "../../services/friendService.js";
+import { createNotification } from "../../services/notificationService.js";
+import { buildThreadId, listenThreadMessages, sendMessage } from "../../services/messageService.js";
 
 const ACTIVE_DM_KEY = "pikaresk_active_dm";
 const ACTIVE_DM_NAME_KEY = "pikaresk_active_dm_name";
@@ -51,8 +53,9 @@ export default function DM(root) {
 
   let activeUser = "";
   let friends = [];
-  const messagesData = {};
   let currentUser = null;
+  let stopThread = null;
+  let threadMessages = [];
 
   function getFilteredFriends(search) {
     const s = (search || "").toLowerCase().trim();
@@ -98,11 +101,11 @@ export default function DM(root) {
       messagesEl.innerHTML = `<div class="contacts-empty">Mesajlasmak icin arkadas sec.</div>`;
       return;
     }
-    const items = messagesData[activeUser] || [];
-    items.forEach((message) => {
+    threadMessages.forEach((message) => {
+      const isMine = message.fromUid === currentUser?.uid;
       messagesEl.innerHTML += `
-        <div class="message-wrapper ${message.from === "me" ? "own" : ""}">
-          <div class="msg-avatar">${message.from === "me" ? "ME" : "U"}</div>
+        <div class="message-wrapper ${isMine ? "own" : ""}">
+          <div class="msg-avatar">${isMine ? "ME" : "U"}</div>
           <div class="msg-bubble">${message.text}</div>
         </div>
       `;
@@ -117,7 +120,20 @@ export default function DM(root) {
     activeUser = id;
     usernameEl.textContent =
       nameOverride || item?.querySelector(".contact-name")?.textContent || "Secim yok";
-    renderMessages();
+    if (stopThread) {
+      stopThread();
+      stopThread = null;
+    }
+    if (currentUser && activeUser) {
+      const threadId = buildThreadId(currentUser.uid, activeUser);
+      stopThread = listenThreadMessages(threadId, (items) => {
+        threadMessages = items;
+        renderMessages();
+      });
+    } else {
+      threadMessages = [];
+      renderMessages();
+    }
   }
 
   contactsEl.addEventListener("click", (event) => {
@@ -126,20 +142,33 @@ export default function DM(root) {
     setActiveUser(item.dataset.userId);
   });
 
-  function sendMessage() {
+  async function sendMessageHandler() {
     const text = input.value.trim();
-    if (!text || !activeUser) return;
-    if (!messagesData[activeUser]) messagesData[activeUser] = [];
-    messagesData[activeUser].push({ from: "me", text });
+    if (!text || !activeUser || !currentUser) return;
     input.value = "";
-    renderMessages();
+    try {
+      await sendMessage({ fromUid: currentUser.uid, toUid: activeUser, text });
+      const target = friends.find((f) => f.id === activeUser);
+      await createNotification({
+        toUid: activeUser,
+        type: "message",
+        title: "Yeni mesaj",
+        body: `${currentUser.displayName || currentUser.email || "Bir kullanici"}: ${text}`,
+        meta: { fromUid: currentUser.uid, threadId: buildThreadId(currentUser.uid, activeUser) },
+      });
+      if (!target) {
+        // keep UI stable even if contact list is stale
+      }
+    } catch {
+      // swallow errors for now
+    }
   }
 
-  sendBtn.addEventListener("click", sendMessage);
+  sendBtn.addEventListener("click", sendMessageHandler);
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      sendMessage();
+      sendMessageHandler();
     }
   });
 

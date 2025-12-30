@@ -232,22 +232,26 @@ export function Friends(root) {
         showToast("Giris yapmalisin.");
         return;
       }
-      const target = await findUserByIdentity(name);
-      if (!target) {
-        showToast("Kullanici bulunamadi.");
-        return;
+      try {
+        const target = await findUserByIdentity(name);
+        if (!target) {
+          showToast("Kullanici bulunamadi.");
+          return;
+        }
+        if (target.id === currentUser.uid) {
+          showToast("Kendini ekleyemezsin.");
+          return;
+        }
+        const result = await sendFriendRequest(currentUser, target);
+        if (result.status !== "pending") {
+          showToast("Bu kullanici zaten listende.");
+        } else {
+          showToast("Arkadas istegi gonderildi.");
+        }
+        await refreshFriends();
+      } catch (error) {
+        showToast(error?.message || "Arkadas istegi gonderilemedi.");
       }
-      if (target.id === currentUser.uid) {
-        showToast("Kendini ekleyemezsin.");
-        return;
-      }
-      const result = await sendFriendRequest(currentUser, target);
-      if (result.status !== "pending") {
-        showToast("Bu kullanici zaten listende.");
-      } else {
-        showToast("Arkadas istegi gonderildi.");
-      }
-      await refreshFriends();
     });
 
     gridEl.addEventListener("click", (event) => {
