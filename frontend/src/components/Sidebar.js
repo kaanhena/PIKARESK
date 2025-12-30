@@ -12,7 +12,7 @@ const sections = [
     title: "SOSYAL",
     items: [
       { key: "friends", label: "Arkadaşlar" },
-      { key: "chat", label: "Chat" }
+      { key: "dm", label: "DM" }
     ]
   },
   {
@@ -20,13 +20,12 @@ const sections = [
     items: [
       { key: "servers", label: "Sunucular" },
       { key: "games", label: "Oyunlar" },
-      { key: "market", label: "Market" }
+      { key: "market", label: "E-Pin Market" }
     ]
   },
   {
     title: "SİSTEM",
     items: [
-      { key: "admin", label: "Admin" },
       { key: "settings", label: "Ayarlar" }
     ]
   }
@@ -85,18 +84,21 @@ style.textContent = `
 .sidebar {
   width: 240px;
   min-height: 100vh;
-  background: linear-gradient(180deg, #0b1220, #0f172a);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9));
   color: #e5e7eb;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid rgba(0, 255, 255, 0.12);
+  box-shadow: 4px 0 24px rgba(0, 255, 255, 0.08);
 }
 
 .sidebar-header {
-  padding: 20px;
+  padding: 18px 20px;
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 1px;
+  border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 255, 255, 0.08);
 }
 
 .sidebar-nav {
@@ -115,25 +117,53 @@ style.textContent = `
 
 .sidebar-item {
   width: 100%;
-  padding: 10px 14px;
+  padding: 10px 14px 10px 18px;
   border-radius: 10px;
-  background: transparent;
-  border: none;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid transparent;
   color: #cbd5f5;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, #ff00e6, #00ffff);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .sidebar-item:hover {
-  background: rgba(99,102,241,0.15);
+  border-color: rgba(0, 255, 255, 0.3);
+  background: rgba(15, 23, 42, 0.8);
   color: #fff;
+  transform: translateX(2px);
+}
+
+.sidebar-item:hover::before {
+  opacity: 1;
 }
 
 .sidebar-item.active {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, rgba(255, 0, 230, 0.2), rgba(0, 255, 255, 0.2));
+  border-color: rgba(0, 255, 255, 0.5);
   color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+}
+
+.sidebar-item.active::before {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.7);
 }
 `;
 document.head.appendChild(style);
+

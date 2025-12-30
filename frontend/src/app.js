@@ -1,11 +1,2 @@
-mport { FriendsPage, initializeFriendsPage } from './friends.js';
-
-document.addEventListener('DOMContentLoaded', () => {
-  const appContainer = document.getElementById('app');
-  
-  // Friends sayfasını yükle
-  appContainer.innerHTML = FriendsPage();
-  
-  // Friends sayfasını başlat
-  initializeFriendsPage();
-});
+// Legacy entry point; keep in sync by delegating to main.
+import "./main.js";

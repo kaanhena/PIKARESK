@@ -1,45 +1,90 @@
 // src/main.js
 import "./styles/app.css";
 
+import { applyStoredSettings } from "./utils/settings.js";
+
 import { Header } from "./components/Header.js";
 import { Sidebar } from "./components/Sidebar.js";
 import { routes } from "./routes/routes.js";
+import { logout, watchAuth } from "./services/authService.js";
 
-/* ROOTS */
-const headerRoot = document.getElementById("header-root");
+const AUTH_KEY = "pikaresk_auth";
+let currentRoute = "home";
+
+applyStoredSettings();
+
+/* ROOT */
 const appRoot = document.getElementById("app");
 
-/* HEADER */
-Header(headerRoot, { title: "PIKARESK" });
-
-/* LAYOUT */
+/* LAYOUT – TEK KEZ OLUŞTUR */
 appRoot.innerHTML = `
-  <div style="display:flex; min-height:100vh;">
-    <div id="sidebar-root"></div>
-    <main id="page-root" style="flex:1; padding:24px;"></main>
+  <div style="display:flex; flex-direction:column; height:100vh;">
+    <div id="header-root"></div>
+    <div style="display:flex; flex:1; min-height:0;">
+      <div id="sidebar-root"></div>
+      <main id="page-root" style="flex:1; min-height:0;"></main>
+    </div>
   </div>
 `;
 
+/* ROOT ELEMENTS */
+const headerRoot = document.getElementById("header-root");
 const sidebarRoot = document.getElementById("sidebar-root");
 const pageRoot = document.getElementById("page-root");
 
+/* HEADER */
+Header(headerRoot, {
+  title: "PIKARESK",
+  onLogout: async () => {
+    await logout();
+    localStorage.removeItem(AUTH_KEY);
+    renderPage("login");
+  }
+});
+
 /* RENDER */
 function renderPage(key) {
-  const route = routes[key] || routes.home;
+  const isAuthed = localStorage.getItem(AUTH_KEY) === "1";
+  const safeKey = key || currentRoute || "home";
+  const targetKey = isAuthed || safeKey === "login" || safeKey === "register" ? safeKey : "login";
+  const route = routes[targetKey] || routes.home;
+  currentRoute = targetKey;
+
+  const isAuthPage = targetKey === "login" || targetKey === "register";
+  headerRoot.style.display = isAuthPage ? "none" : "";
+  sidebarRoot.style.display = isAuthPage ? "none" : "";
 
   pageRoot.innerHTML = "";
   route.page(pageRoot);
 
-  Sidebar(sidebarRoot, {
-    active: key,
-    onNavigate: renderPage
-  });
+  if (!isAuthPage) {
+    Sidebar(sidebarRoot, {
+      active: targetKey,
+      onNavigate: renderPage
+    });
+  }
 }
 
 /* DEFAULT */
 renderPage("home");
 
-/* GLOBAL (opsiyonel) */
+/* GLOBAL */
 window.PIKARESK = {
   go: renderPage
 };
+
+watchAuth((user) => {
+  if (user) {
+    localStorage.setItem(AUTH_KEY, "1");
+    if (currentRoute === "login" || currentRoute === "register") {
+      renderPage("home");
+      return;
+    }
+    renderPage(currentRoute);
+    return;
+  }
+  localStorage.removeItem(AUTH_KEY);
+  if (currentRoute !== "login" && currentRoute !== "register") {
+    renderPage("login");
+  }
+});
