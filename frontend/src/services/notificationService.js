@@ -16,8 +16,10 @@ import { db } from "../firebase";
 
 export async function createNotification({ toUid, type, title, body, meta = {} }) {
   if (!toUid) return null;
+  const fromUid = meta.fromUid || "";
   const payload = {
     toUid,
+    fromUid,
     type,
     title,
     body,
