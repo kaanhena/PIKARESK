@@ -418,7 +418,16 @@ export function Servers(root) {
 
       room.on(RoomEvent.ParticipantConnected, refreshVoiceParticipants);
       room.on(RoomEvent.ParticipantDisconnected, refreshVoiceParticipants);
-      room.on(RoomEvent.Disconnected, () => {
+      room.on(RoomEvent.ConnectionStateChanged, (state) => {
+        console.log("LiveKit state:", state);
+      });
+      room.on(RoomEvent.Disconnected, (reason) => {
+        console.warn("LiveKit disconnected:", reason);
+        if (reason === "duplicate_identity") {
+          showToast("Bu hesap baska bir cihazda baglandi.");
+        } else {
+          showToast("Sesli baglanti koptu.");
+        }
         cleanupLivekit();
       });
       room.on(RoomEvent.TrackSubscribed, (track) => {
@@ -440,6 +449,7 @@ export function Servers(root) {
       updateMicButton(micEnabled);
       refreshVoiceParticipants();
     } catch (error) {
+      console.warn("LiveKit connect error:", error);
       showToast(error?.message || "Sesli sohbet baslatilamadi.");
       cleanupLivekit();
     } finally {
