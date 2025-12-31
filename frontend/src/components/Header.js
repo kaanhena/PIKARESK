@@ -269,8 +269,9 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
     stopNotifications = listenNotifications(
       user.uid,
       (items) => {
-        lastNotifications = items;
-        renderNotifications(items);
+        const filtered = items.filter((item) => item.type !== "message");
+        lastNotifications = filtered;
+        renderNotifications(filtered);
       },
       (error) => {
         console.warn("Notifications listener error:", error?.code || error);
