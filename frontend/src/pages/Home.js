@@ -13,21 +13,21 @@ export function Home(root) {
         <div class="hero-content">
           <div class="hero-badge">
             <span>✨</span>
-            <span>Premium Dijital Urunler</span>
+            <span>Premium Dijital Ürünler</span>
           </div>
-          <h1 class="hero-title">Oyun Dunyasina Hos Geldin!</h1>
+          <h1 class="hero-title">Oyun Dünyasına Hoş Geldin!</h1>
           <p class="hero-description">
-            En populer oyunlar, streaming platformlari ve dijital urunler icin guvenli ve
-            hizli alisveris deneyimi. Binlerce urunden hemen sec, aninda teslim al!
+            En popüler oyunlar, streaming platformları ve dijital ürünler için güvenli ve
+            hızlı alışveriş deneyimi. Binlerce üründen hemen seç, anında teslim al!
           </p>
           <div class="hero-actions">
             <button class="hero-btn hero-btn-primary" type="button" data-action="go-market">
               <span>🛍️</span>
-              <span>Market'i Kesfet</span>
+              <span>Market'i Keşfet</span>
             </button>
             <button class="hero-btn hero-btn-secondary" type="button">
               <span>🎮</span>
-              <span>Populer Oyunlar</span>
+              <span>Popüler Oyunlar</span>
             </button>
           </div>
         </div>
@@ -38,17 +38,17 @@ export function Home(root) {
           <div class="stat-card">
             <div class="stat-icon">👥</div>
             <div class="stat-value" data-stat="user-count">${formattedUserCount}</div>
-            <div class="stat-label">Mutlu Kullanici</div>
+            <div class="stat-label">Mutlu Kullanıcı</div>
           </div>
           <div class="stat-card">
             <div class="stat-icon">📦</div>
             <div class="stat-value">150K+</div>
-            <div class="stat-label">Tamamlanan Siparis</div>
+            <div class="stat-label">Tamamlanan Sipariş</div>
           </div>
           <div class="stat-card">
             <div class="stat-icon">⚡</div>
             <div class="stat-value">%99.8</div>
-            <div class="stat-label">Basari Orani</div>
+            <div class="stat-label">Başarı Oranı</div>
           </div>
           <div class="stat-card">
             <div class="stat-icon">🎯</div>
@@ -61,55 +61,55 @@ export function Home(root) {
       <div class="features-home">
         <div class="section-header">
           <h2 class="section-title">Neden Pikaresk?</h2>
-          <p class="section-subtitle">En iyi dijital alisveris deneyimi icin</p>
+          <p class="section-subtitle">En iyi dijital alışveriş deneyimi için</p>
         </div>
         <div class="features-grid">
           <div class="feature-card">
             <span class="feature-icon">⚡</span>
-            <h3 class="feature-title">Aninda Teslimat</h3>
+            <h3 class="feature-title">Anında Teslimat</h3>
             <p class="feature-description">
-              Odeme yaptiktan sonra kodlariniz saniyeler icinde hesabiniza tanimlanir.
-              Hemen kullanmaya baslayin!
+              Ödeme yaptıktan sonra kodlarınız saniyeler içinde hesabınıza tanımlanır.
+              Hemen kullanmaya başlayın!
             </p>
           </div>
           <div class="feature-card">
             <span class="feature-icon">🛡️</span>
-            <h3 class="feature-title">%100 Guvenli</h3>
+            <h3 class="feature-title">%100 Güvenli</h3>
             <p class="feature-description">
-              SSL sertifikali altyapimiz ve guvenli odeme sistemimizle verileriniz her
+              SSL sertifikalı altyapımız ve güvenli ödeme sistemimizle verileriniz her
               zaman korunur.
             </p>
           </div>
           <div class="feature-card">
             <span class="feature-icon">💎</span>
-            <h3 class="feature-title">En Iyi Fiyatlar</h3>
+            <h3 class="feature-title">En İyi Fiyatlar</h3>
             <p class="feature-description">
-              Piyasanin en uygun fiyatlari ve ozel kampanyalarla tasarruf edin. Her
-              zaman kazancili cikin!
+              Piyasanın en uygun fiyatları ve özel kampanyalarla tasarruf edin. Her
+              zaman kazançlı çıkın!
             </p>
           </div>
           <div class="feature-card">
             <span class="feature-icon">🎁</span>
             <h3 class="feature-title">Bonus Sistemler</h3>
             <p class="feature-description">
-              Her alisverisinizde puan kazanin, ozel indirimler ve kampanyalardan
-              yararlanin.
+              Her alışverişinizde puan kazanın, özel indirimler ve kampanyalardan
+              yararlanın.
             </p>
           </div>
           <div class="feature-card">
             <span class="feature-icon">💬</span>
             <h3 class="feature-title">7/24 Destek</h3>
             <p class="feature-description">
-              Uzman destek ekibimiz her zaman yaninizda. Sorulariniz icin hemen bize
-              ulasin!
+              Uzman destek ekibimiz her zaman yanınızda. Sorularınız için hemen bize
+              ulaşın!
             </p>
           </div>
           <div class="feature-card">
             <span class="feature-icon">🌟</span>
-            <h3 class="feature-title">Genis Urun Yelpazesi</h3>
+            <h3 class="feature-title">Geniş Ürün Yelpazesi</h3>
             <p class="feature-description">
-              Oyun kodlarindan streaming aboneliklerine, yazilimlardan mobil iceriklere
-              binlerce urun!
+              Oyun kodlarından streaming aboneliklerine, yazılımlardan mobil içeriklere
+              binlerce ürün!
             </p>
           </div>
         </div>
@@ -117,19 +117,19 @@ export function Home(root) {
 
       <div class="cta-section">
         <div class="cta-content">
-          <h2 class="cta-title">Hemen Alisverise Basla!</h2>
+          <h2 class="cta-title">Hemen Alışverişe Başla!</h2>
           <p class="cta-description">
-            Ilk siparisinde %10 indirim firsatini kacirma. Hemen uye ol ve ozel
+            İlk siparişinde %10 indirim fırsatını kaçırma. Hemen üye ol ve özel
             tekliflerden yararlan!
           </p>
           <div class="hero-actions">
             <button class="hero-btn hero-btn-primary" type="button">
               <span>🚀</span>
-              <span>Hemen Basla</span>
+              <span>Hemen Başla</span>
             </button>
             <button class="hero-btn hero-btn-secondary" type="button">
               <span>📱</span>
-              <span>Uygulamayi Indir</span>
+              <span>Uygulamayı İndir</span>
             </button>
           </div>
         </div>

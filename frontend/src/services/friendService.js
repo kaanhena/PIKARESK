@@ -99,8 +99,8 @@ export async function sendFriendRequest(fromUser, toUser) {
     await createNotification({
       toUid: toUser.id,
       type: "friend_request",
-      title: "Arkadaslik istegi",
-      body: `${payload.fromName} sana arkadaslik istegi gonderdi.`,
+      title: "Arkadaşlık isteği",
+      body: `${payload.fromName} sana arkadaşlık isteği gönderdi.`,
       meta: { fromUid: fromUser.uid },
     });
   } catch {

@@ -41,7 +41,7 @@ export const routes = {
 
   friends: {
     page: Friends,
-    title: "Arkadaslar",
+    title: "Arkadaşlar",
   },
 
   dm: {
@@ -55,23 +55,23 @@ export const routes = {
   },
 
   games: {
-    page: Games ?? ActivePage("Oyunlar", "Oyun modulleri aktif."),
+    page: Games ?? ActivePage("Oyunlar", "Oyun modülleri aktif."),
     title: "Oyunlar",
   },
 
   market: {
-    page: Market ?? ActivePage("Market", "E-pin ve magaza sistemi aktif."),
+    page: Market ?? ActivePage("Market", "E-pin ve mağaza sistemi aktif."),
     title: "Market",
   },
 
   register: {
     page: Register,
-    title: "Kayit Ol",
+    title: "Kayıt Ol",
   },
 
   login: {
     page: Login,
-    title: "Giris Yap",
+    title: "Giriş Yap",
   },
 
   settings: {

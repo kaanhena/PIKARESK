@@ -33,14 +33,14 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
         </button>
 
         <div class="user-profile" role="button" tabindex="0" id="headerProfile">
-          <span class="user-name" data-user-name>Kullanici</span>
+          <span class="user-name" data-user-name>Kullanıcı</span>
           <div class="user-avatar">
             <span data-user-initial>K</span>
             <span class="status-indicator" aria-hidden="true"></span>
           </div>
         </div>
 
-        <button class="btn btn-ghost" id="logoutBtn" type="button">Cikis</button>
+        <button class="btn btn-ghost" id="logoutBtn" type="button">Çıkış</button>
       </div>
     </header>
     <div class="header-search-panel" id="headerSearchPanel" aria-hidden="true">
@@ -51,13 +51,13 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
             class="header-search-input"
             id="headerSearchInput"
             type="text"
-            placeholder="Kullanici veya urun ara..."
+            placeholder="Kullanıcı veya ürün ara..."
             autocomplete="off"
           >
-          <button class="header-search-close" type="button" data-action="close-search">ƒo</button>
+          <button class="header-search-close" type="button" data-action="close-search">Kapat</button>
         </div>
         <div class="header-search-results" id="headerSearchResults">
-          <div class="header-search-empty">Aramak icin yazmaya basla.</div>
+          <div class="header-search-empty">Aramak için yazmaya başla.</div>
         </div>
       </div>
     </div>
@@ -66,7 +66,7 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
       <div class="header-notify-box" role="dialog" aria-modal="true" aria-label="Bildirimler">
         <div class="header-notify-head">
           <span>Bildirimler</span>
-          <button class="header-notify-clear" type="button" id="markAllNotifyBtn">Tumunu okundu</button>
+          <button class="header-notify-clear" type="button" id="markAllNotifyBtn">Tümünü okundu</button>
         </div>
         <div class="header-notify-list" id="headerNotifyList">
           <div class="header-search-empty">Bildirim yok.</div>
@@ -125,7 +125,7 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
     if (!results) return;
     const userItems = users
       .map((user) => {
-        const label = user.displayName || user.email || "Kullanici";
+        const label = user.displayName || user.email || "Kullanıcı";
         const meta = user.email || "";
         const encoded = encodeURIComponent(label);
         return `
@@ -152,7 +152,7 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
     if (userItems) {
       sections.push(`
         <div class="header-search-section">
-          <div class="header-search-section-title">Kullanicilar</div>
+          <div class="header-search-section-title">Kullanıcılar</div>
           <div class="header-search-section-list">${userItems}</div>
         </div>
       `);
@@ -166,17 +166,17 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
       `);
     }
     results.innerHTML =
-      sections.join("") || `<div class="header-search-empty">Sonuc bulunamadi.</div>`;
+      sections.join("") || `<div class="header-search-empty">Sonuç bulunamadı.</div>`;
   }
 
   let searchTimer = null;
   async function handleSearch() {
     const query = input?.value?.trim() || "";
     if (!query) {
-      renderEmpty("Aramak icin yazmaya basla.");
+      renderEmpty("Aramak için yazmaya başla.");
       return;
     }
-    renderEmpty("Araniyor...");
+    renderEmpty("Aranıyor...");
     try {
       const [users, products] = await Promise.all([
         searchUsers(query, 6),
@@ -184,7 +184,7 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
       ]);
       renderResults({ users, products });
     } catch (error) {
-      renderEmpty("Arama sirasinda hata olustu.");
+      renderEmpty("Arama sırasında hata oluştu.");
     }
   }
 

@@ -2,7 +2,7 @@ const STORAGE_KEY = "pikaresk_settings";
 
 const DEFAULT_SETTINGS = {
   displayName: "PikaBoy",
-  bio: "Oyun oynamayi seven bir gelistirici",
+  bio: "Oyun oynamayı seven bir geliştirici",
   bannerColor: "#ff00e6",
   theme: "neon",
   fontScale: 16,

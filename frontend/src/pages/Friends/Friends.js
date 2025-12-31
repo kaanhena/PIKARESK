@@ -10,9 +10,9 @@ import { watchAuth } from "../../services/authService.js";
 
 export function Friends(root) {
   const statusText = {
-    online: "Arkadas",
-    pending: "Istek",
-    outgoing: "Gonderildi",
+    online: "Arkadaş",
+    pending: "İstek",
+    outgoing: "Gönderildi",
     blocked: "Engellendi",
   };
 
@@ -148,15 +148,15 @@ export function Friends(root) {
   <div class="friends-container">
     <header class="page-header">
       <div class="header-left">
-        <div class="page-icon">??</div>
+        <div class="page-icon">👥</div>
         <div>
-          <h2>Arkadaslar</h2>
-          <p style="opacity:.6;font-size:14px">Arkadaslarini yonet</p>
+          <h2>Arkadaşlar</h2>
+          <p style="opacity:.6;font-size:14px">Arkadaşlarını yönet</p>
         </div>
       </div>
       <div class="header-actions">
         <div class="search-group">
-          <input class="search-input" id="friendSearch" placeholder="Kullanici adi veya e-posta">
+          <input class="search-input" id="friendSearch" placeholder="Kullanıcı adı veya e-posta">
           <button class="add-friend-btn" id="addFriendBtn">+</button>
         </div>
       </div>
@@ -164,13 +164,13 @@ export function Friends(root) {
 
     <nav class="filter-tabs">
       <button class="filter-tab active" data-filter="all">
-        Tumu <span class="tab-count" id="c-all"></span>
+        Tümü <span class="tab-count" id="c-all"></span>
       </button>
       <button class="filter-tab" data-filter="online">
-        Arkadaslar <span class="tab-count" id="c-online"></span>
+        Arkadaşlar <span class="tab-count" id="c-online"></span>
       </button>
       <button class="filter-tab" data-filter="pending">
-        Istekler <span class="tab-count" id="c-pending"></span>
+        İstekler <span class="tab-count" id="c-pending"></span>
       </button>
       <button class="filter-tab" data-filter="blocked">
         Engellenen <span class="tab-count" id="c-blocked"></span>
@@ -179,7 +179,7 @@ export function Friends(root) {
 
     <main class="friends-content">
       <div class="friends-grid" id="friendsGrid"></div>
-      <div class="empty-state" id="emptyState" style="display:none;">Sonuc bulunamadi.</div>
+      <div class="empty-state" id="emptyState" style="display:none;">Sonuç bulunamadı.</div>
     </main>
   </div>
 
@@ -229,13 +229,13 @@ export function Friends(root) {
       const name = searchEl.value.trim();
       if (!name) return;
       if (!currentUser) {
-        showToast("Giris yapmalisin.");
+        showToast("Giriş yapmalısın.");
         return;
       }
       try {
         const target = await findUserByIdentity(name);
         if (!target) {
-          showToast("Kullanici bulunamadi.");
+          showToast("Kullanıcı bulunamadı.");
           return;
         }
         if (target.id === currentUser.uid) {
@@ -244,13 +244,13 @@ export function Friends(root) {
         }
         const result = await sendFriendRequest(currentUser, target);
         if (result.status !== "pending") {
-          showToast("Bu kullanici zaten listende.");
+          showToast("Bu kullanıcı zaten listende.");
         } else {
-          showToast("Arkadas istegi gonderildi.");
+          showToast("Arkadaş isteği gönderildi.");
         }
         await refreshFriends();
       } catch (error) {
-        showToast(error?.message || "Arkadas istegi gonderilemedi.");
+        showToast(error?.message || "Arkadaş isteği gönderilemedi.");
       }
     });
 
@@ -292,8 +292,8 @@ export function Friends(root) {
     if (friend.status === "blocked") {
       return `
         <button data-action="profile">Profil</button>
-        <button data-action="unblock">Engeli Kaldir</button>
-        <button data-action="remove">Arkadasliktan Cikar</button>
+        <button data-action="unblock">Engeli Kaldır</button>
+        <button data-action="remove">Arkadaşlıktan Çıkar</button>
       `;
     }
     if (friend.status === "pending" && !friend.isOutgoing) {
@@ -307,20 +307,20 @@ export function Friends(root) {
     if (friend.status === "outgoing") {
       return `
         <button data-action="profile">Profil</button>
-        <button data-action="cancel">Iptal Et</button>
+        <button data-action="cancel">İptal Et</button>
       `;
     }
     return `
       <button data-action="profile">Profil</button>
       <button data-action="dm">Mesaj</button>
       <button data-action="block">Engelle</button>
-      <button data-action="remove">Arkadasliktan Cikar</button>
+      <button data-action="remove">Arkadaşlıktan Çıkar</button>
     `;
   }
 
   function buildActions(friend) {
     if (friend.status === "blocked") {
-      return `<button class="action-button primary" data-action="unblock">Engeli Kaldir</button>`;
+      return `<button class="action-button primary" data-action="unblock">Engeli Kaldır</button>`;
     }
     if (friend.status === "pending" && !friend.isOutgoing) {
       return `
@@ -329,7 +329,7 @@ export function Friends(root) {
       `;
     }
     if (friend.status === "outgoing") {
-      return `<button class="action-button danger" data-action="cancel">Iptal Et</button>`;
+      return `<button class="action-button danger" data-action="cancel">İptal Et</button>`;
     }
     return `
       <button class="action-button primary" data-action="dm">Mesaj</button>
@@ -420,8 +420,8 @@ export function Friends(root) {
           await createNotification({
             toUid: friend.id,
             type: "friend_accept",
-            title: "Arkadaslik kabul edildi",
-            body: `${currentUser.displayName || currentUser.email || "Bir kullanici"} istegini kabul etti.`,
+            title: "Arkadaşlık kabul edildi",
+            body: `${currentUser.displayName || currentUser.email || "Bir kullanıcı"} isteğini kabul etti.`,
             meta: { fromUid: currentUser.uid },
           });
         } catch {
@@ -457,7 +457,7 @@ export function Friends(root) {
       if (status === "accepted") status = "online";
       return {
         id: isOutgoing ? request.toUid : request.fromUid,
-        name: name || email || "Kullanici",
+        name: name || email || "Kullanıcı",
         email: email || "",
         status,
         requestId: request.id,
@@ -471,7 +471,7 @@ export function Friends(root) {
   watchAuth((user) => {
     currentUser = user;
     if (!user) {
-      root.innerHTML = `<div class="empty-state">Giris yapman gerekiyor.</div>`;
+      root.innerHTML = `<div class="empty-state">Giriş yapman gerekiyor.</div>`;
       return;
     }
     initUI();

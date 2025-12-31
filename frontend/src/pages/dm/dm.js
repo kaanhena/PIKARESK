@@ -12,21 +12,21 @@ export default function DM(root) {
     <div class="dm-container">
       <aside class="contacts-panel">
         <div class="panel-header">
-          <div class="header-title">?? Direkt Mesajlar</div>
-          <input class="search-input" id="dmSearch" placeholder="Kisi ara...">
+          <div class="header-title">💬 Direkt Mesajlar</div>
+          <input class="search-input" id="dmSearch" placeholder="Kişi ara...">
         </div>
         <div class="contacts-list" id="dmContacts"></div>
-        <div class="contacts-empty" id="dmEmpty" style="display:none;">Arkadas yok.</div>
+        <div class="contacts-empty" id="dmEmpty" style="display:none;">Arkadaş yok.</div>
       </aside>
 
       <main class="chat-panel">
         <div class="animated-bg"></div>
         <header class="chat-header">
           <div class="chat-user-info">
-            <div class="chat-avatar">??<div class="status-indicator online"></div></div>
+            <div class="chat-avatar">👤<div class="status-indicator online"></div></div>
             <div>
-              <strong id="chat-username">Secim yok</strong>
-              <div style="font-size:13px;opacity:.6">Cevrimici</div>
+              <strong id="chat-username">Seçim yok</strong>
+              <div style="font-size:13px;opacity:.6">Çevrimiçi</div>
             </div>
           </div>
         </header>
@@ -35,8 +35,8 @@ export default function DM(root) {
 
         <div class="message-input-area">
           <div class="input-container">
-            <textarea class="msg-input" id="msgInput" placeholder="Mesajini yaz..."></textarea>
-            <button class="send-btn" id="sendBtn">Gonder</button>
+            <textarea class="msg-input" id="msgInput" placeholder="Mesajını yaz..."></textarea>
+            <button class="send-btn" id="sendBtn">Gönder</button>
           </div>
         </div>
       </main>
@@ -68,7 +68,7 @@ export default function DM(root) {
       .map(
         (friend) => `
       <div class="contact-item" data-user-id="${friend.id}">
-        <div class="contact-avatar">??<div class="status-indicator online"></div></div>
+        <div class="contact-avatar">👤<div class="status-indicator online"></div></div>
         <div>
           <div class="contact-name">${friend.name}</div>
           <div class="contact-last-msg"></div>
@@ -98,7 +98,7 @@ export default function DM(root) {
   function renderMessages() {
     messagesEl.innerHTML = "";
     if (!activeUser) {
-      messagesEl.innerHTML = `<div class="contacts-empty">Mesajlasmak icin arkadas sec.</div>`;
+      messagesEl.innerHTML = `<div class="contacts-empty">Mesajlaşmak için arkadaş seç.</div>`;
       return;
     }
     threadMessages.forEach((message) => {
@@ -119,7 +119,7 @@ export default function DM(root) {
     if (item) item.classList.add("active");
     activeUser = id;
     usernameEl.textContent =
-      nameOverride || item?.querySelector(".contact-name")?.textContent || "Secim yok";
+      nameOverride || item?.querySelector(".contact-name")?.textContent || "Seçim yok";
     if (stopThread) {
       stopThread();
       stopThread = null;
@@ -153,7 +153,7 @@ export default function DM(root) {
         toUid: activeUser,
         type: "message",
         title: "Yeni mesaj",
-        body: `${currentUser.displayName || currentUser.email || "Bir kullanici"}: ${text}`,
+        body: `${currentUser.displayName || currentUser.email || "Bir kullanıcı"}: ${text}`,
         meta: { fromUid: currentUser.uid, threadId: buildThreadId(currentUser.uid, activeUser) },
       });
       if (!target) {

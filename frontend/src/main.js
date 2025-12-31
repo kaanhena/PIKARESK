@@ -48,7 +48,7 @@ function updateHeaderUser(user) {
   if (!nameEl || !initialEl) return;
   const displayName = user?.displayName?.trim();
   const email = user?.email?.trim();
-  const label = displayName || email || "Kullanici";
+  const label = displayName || email || "Kullanıcı";
   nameEl.textContent = label;
   initialEl.textContent = label[0]?.toUpperCase() || "K";
 }

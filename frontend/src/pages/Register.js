@@ -32,15 +32,15 @@ export function Register(root) {
               <span class="auth-brand-icon">P</span>
               <span class="auth-brand-text">PIKARESK</span>
             </div>
-            <h1 class="auth-title">Kayit Ol</h1>
-            <p class="auth-subtitle">Hemen hesap olustur ve alisverise basla.</p>
+            <h1 class="auth-title">Kayıt Ol</h1>
+            <p class="auth-subtitle">Hemen hesap oluştur ve alışverişe başla.</p>
           </div>
           <form class="auth-form" id="registerForm">
             <div class="auth-group">
               <label class="auth-label" for="register-name">Ad Soyad</label>
               <div class="auth-input-wrap">
                 <span class="auth-input-icon">A</span>
-                <input class="auth-input" id="register-name" type="text" placeholder="Adiniz Soyadiniz" required>
+                <input class="auth-input" id="register-name" type="text" placeholder="Adınız Soyadınız" required>
               </div>
             </div>
             <div class="auth-group">
@@ -51,34 +51,34 @@ export function Register(root) {
               </div>
             </div>
             <div class="auth-group">
-              <label class="auth-label" for="register-password">Sifre</label>
+              <label class="auth-label" for="register-password">Şifre</label>
               <div class="auth-input-wrap">
                 <span class="auth-input-icon">#</span>
                 <input class="auth-input" id="register-password" type="password" placeholder="********" required>
-                <button class="auth-toggle" type="button" data-toggle="password">Goster</button>
+                <button class="auth-toggle" type="button" data-toggle="password">Göster</button>
               </div>
             </div>
             <div class="auth-group">
-              <label class="auth-label" for="register-confirm">Sifre Tekrar</label>
+              <label class="auth-label" for="register-confirm">Şifre Tekrar</label>
               <div class="auth-input-wrap">
                 <span class="auth-input-icon">#</span>
                 <input class="auth-input" id="register-confirm" type="password" placeholder="********" required>
-                <button class="auth-toggle" type="button" data-toggle="confirm">Goster</button>
+                <button class="auth-toggle" type="button" data-toggle="confirm">Göster</button>
               </div>
             </div>
             <div class="auth-options">
               <label class="auth-checkbox">
                 <input type="checkbox" id="terms-check" required>
-                Kullanim sartlarini kabul ediyorum
+                Kullanım şartlarını kabul ediyorum
               </label>
             </div>
-            <button class="auth-submit" type="submit">Hesap Olustur</button>
+            <button class="auth-submit" type="submit">Hesap Oluştur</button>
             <div class="auth-divider"><span>veya</span></div>
             <div class="auth-social">
-              <button class="auth-social-btn" type="button">Google ile Kayit Ol</button>
+              <button class="auth-social-btn" type="button">Google ile Kayıt Ol</button>
             </div>
             <div class="auth-footer">
-              Zaten hesabin var mi? <a class="auth-link" href="#" id="goLogin">Giris Yap</a>
+              Zaten hesabın var mı? <a class="auth-link" href="#" id="goLogin">Giriş Yap</a>
             </div>
           </form>
         </div>
@@ -94,13 +94,13 @@ export function Register(root) {
   togglePassword?.addEventListener("click", () => {
     const isHidden = passwordInput.type === "password";
     passwordInput.type = isHidden ? "text" : "password";
-    togglePassword.textContent = isHidden ? "Gizle" : "Goster";
+    togglePassword.textContent = isHidden ? "Gizle" : "Göster";
   });
 
   toggleConfirm?.addEventListener("click", () => {
     const isHidden = confirmInput.type === "password";
     confirmInput.type = isHidden ? "text" : "password";
-    toggleConfirm.textContent = isHidden ? "Gizle" : "Goster";
+    toggleConfirm.textContent = isHidden ? "Gizle" : "Göster";
   });
 
   const consoleIcon = root.querySelector(".auth-left-icon");
@@ -119,7 +119,7 @@ export function Register(root) {
   registerForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (passwordInput.value !== confirmInput.value) {
-      showToast("Sifreler eslesmiyor.");
+      showToast("Şifreler eşleşmiyor.");
       return;
     }
     const name = root.querySelector("#register-name")?.value?.trim() || "";
@@ -127,17 +127,17 @@ export function Register(root) {
     const password = passwordInput.value || "";
     const submitBtn = registerForm.querySelector(".auth-submit");
     submitBtn.disabled = true;
-    submitBtn.textContent = "Kayit yapiliyor...";
+    submitBtn.textContent = "Kayıt yapılıyor...";
     try {
       const user = await register(email, password, name);
       await ensureUserProfile(user);
       localStorage.setItem(AUTH_KEY, "1");
       window.PIKARESK?.go?.("home");
     } catch (error) {
-      showToast(error?.message || "Kayit basarisiz.");
+      showToast(error?.message || "Kayıt başarısız.");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Hesap Olustur";
+      submitBtn.textContent = "Hesap Oluştur";
     }
   });
 }

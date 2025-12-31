@@ -32,8 +32,8 @@ export function Login(root) {
               <span class="auth-brand-icon">P</span>
               <span class="auth-brand-text">PIKARESK</span>
             </div>
-            <h1 class="auth-title">Giris Yap</h1>
-            <p class="auth-subtitle">Hesabina giris yaparak devam et.</p>
+            <h1 class="auth-title">Giriş Yap</h1>
+            <p class="auth-subtitle">Hesabına giriş yaparak devam et.</p>
           </div>
           <form class="auth-form" id="loginForm">
             <div class="auth-group">
@@ -44,27 +44,27 @@ export function Login(root) {
               </div>
             </div>
             <div class="auth-group">
-              <label class="auth-label" for="login-password">Sifre</label>
+              <label class="auth-label" for="login-password">Şifre</label>
               <div class="auth-input-wrap">
                 <span class="auth-input-icon">#</span>
                 <input class="auth-input" id="login-password" type="password" placeholder="********" required>
-                <button class="auth-toggle" type="button" data-toggle="password">Goster</button>
+                <button class="auth-toggle" type="button" data-toggle="password">Göster</button>
               </div>
             </div>
             <div class="auth-options">
               <label class="auth-checkbox">
                 <input type="checkbox" id="remember-me">
-                Beni hatirla
+                Beni hatırla
               </label>
-              <a class="auth-link" href="#">Sifremi unuttum?</a>
+              <a class="auth-link" href="#">Şifremi unuttum?</a>
             </div>
-            <button class="auth-submit" type="submit">Giris Yap</button>
+            <button class="auth-submit" type="submit">Giriş Yap</button>
             <div class="auth-divider"><span>veya</span></div>
             <div class="auth-social">
-              <button class="auth-social-btn" type="button">Google ile Giris</button>
+              <button class="auth-social-btn" type="button">Google ile Giriş</button>
             </div>
             <div class="auth-footer">
-              Hesabin yok mu? <a class="auth-link" href="#" id="goRegister">Kayit ol</a>
+              Hesabın yok mu? <a class="auth-link" href="#" id="goRegister">Kayıt ol</a>
             </div>
           </form>
         </div>
@@ -77,7 +77,7 @@ export function Login(root) {
   toggleBtn?.addEventListener("click", () => {
     const isHidden = passwordInput.type === "password";
     passwordInput.type = isHidden ? "text" : "password";
-    toggleBtn.textContent = isHidden ? "Gizle" : "Goster";
+    toggleBtn.textContent = isHidden ? "Gizle" : "Göster";
   });
 
   const consoleIcon = root.querySelector(".auth-left-icon");
@@ -99,17 +99,17 @@ export function Login(root) {
     const password = root.querySelector("#login-password")?.value || "";
     const submitBtn = loginForm.querySelector(".auth-submit");
     submitBtn.disabled = true;
-    submitBtn.textContent = "Giris yapiliyor...";
+    submitBtn.textContent = "Giriş yapılıyor...";
     try {
       const user = await login(email, password);
       await ensureUserProfile(user);
       localStorage.setItem(AUTH_KEY, "1");
       window.PIKARESK?.go?.("home");
     } catch (error) {
-      showToast(error?.message || "Giris basarisiz.");
+      showToast(error?.message || "Giriş başarısız.");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Giris Yap";
+      submitBtn.textContent = "Giriş Yap";
     }
   });
 }
