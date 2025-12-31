@@ -159,6 +159,10 @@
   font-size: 13px;
 }
 
+.voice-audio {
+  display: none;
+}
+
 .voice-user {
   display: flex;
   align-items: center;

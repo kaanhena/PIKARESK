@@ -1,5 +1,7 @@
 import "./Servers.css";
+import { Room, RoomEvent, createLocalAudioTrack } from "livekit-client";
 import { watchAuth } from "../../services/authService.js";
+import { http } from "../../services/http.js";
 import {
   createInvite,
   createServerForUser,
@@ -31,6 +33,7 @@ export function Servers(root) {
           <div class="voice-list" id="voiceList">
             <div class="voice-empty">Sesli odada kimse yok.</div>
           </div>
+          <div class="voice-audio" id="voiceAudio"></div>
           <div class="voice-controls">
             <button class="control-btn mic-btn" id="micBtn" type="button">
               <span class="icon">MIC</span>
@@ -144,6 +147,7 @@ export function Servers(root) {
   const chatEmpty = root.querySelector("#chatEmpty");
   const messages = root.querySelector("#messages");
   const voiceList = root.querySelector("#voiceList");
+  const voiceAudio = root.querySelector("#voiceAudio");
 
   const addServerModal = root.querySelector("#addServerModal");
   const inviteModal = root.querySelector("#inviteModal");
@@ -179,6 +183,10 @@ export function Servers(root) {
   let stopMembers = null;
   let stopMessages = null;
   let voiceConfig = { volume: 70, sensitivity: 50, noise: false, echo: false };
+  let livekitRoom = null;
+  let localAudioTrack = null;
+  let isConnecting = false;
+  let micEnabled = true;
 
   function showToast(message) {
     const toast = document.createElement("div");
@@ -216,11 +224,13 @@ export function Servers(root) {
       serverSubtitle.textContent = "0 kisi cevrimici";
       chatTitle.textContent = "Genel Sohbet";
       inviteBtn.disabled = true;
+      joinBtn.disabled = true;
       input.disabled = true;
       sendBtn.disabled = true;
       return;
     }
     inviteBtn.disabled = false;
+    joinBtn.disabled = false;
     input.disabled = false;
     sendBtn.disabled = false;
     servers.forEach((server) => {
@@ -245,6 +255,7 @@ export function Servers(root) {
   }
 
   function renderVoiceMembers(members) {
+    if (livekitRoom) return;
     if (!members.length) {
       voiceList.innerHTML = `<div class="voice-empty">Sesli odada kimse yok.</div>`;
       serverSubtitle.textContent = "0 kisi cevrimici";
@@ -254,6 +265,29 @@ export function Servers(root) {
     voiceList.innerHTML = members
       .map((member) => {
         const name = member.userName || "Kullanici";
+        const initial = name[0]?.toUpperCase() || "K";
+        return `
+          <div class="voice-user">
+            <div class="voice-avatar">${initial}</div>
+            <div>
+              <div class="voice-name">${name}</div>
+              <div class="voice-status">Dinliyor</div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  function renderVoiceParticipants(participants) {
+    if (!participants.length) {
+      renderVoiceMembers([]);
+      return;
+    }
+    serverSubtitle.textContent = `${participants.length} kisi cevrimici`;
+    voiceList.innerHTML = participants
+      .map((participant) => {
+        const name = participant.name || participant.identity || "Kullanici";
         const initial = name[0]?.toUpperCase() || "K";
         return `
           <div class="voice-user">
@@ -310,9 +344,112 @@ export function Servers(root) {
     stopMessages = null;
   }
 
+  function updateJoinButton(connected) {
+    joinBtn.classList.toggle("active", connected);
+    const icon = joinBtn.querySelector(".icon");
+    const text = joinBtn.querySelector("span:last-child");
+    icon.textContent = connected ? "CALL" : "EXIT";
+    text.textContent = connected ? "Sesli Odadan Ayril" : "Sesli Odaya Katil";
+  }
+
+  function updateMicButton(enabled) {
+    micBtn.classList.toggle("active", enabled);
+    const icon = micBtn.querySelector(".icon");
+    const text = micBtn.querySelector("span:last-child");
+    icon.textContent = enabled ? "ON" : "MIC";
+    text.textContent = enabled ? "Mikrofon Acik" : "Mikrofon";
+  }
+
+  function attachTrack(track) {
+    const element = track.attach();
+    element.dataset.trackSid = track.sid;
+    voiceAudio.appendChild(element);
+  }
+
+  function detachTrack(track) {
+    track.detach().forEach((el) => el.remove());
+  }
+
+  function collectParticipants(room) {
+    const participants = [];
+    if (room?.localParticipant) {
+      participants.push(room.localParticipant);
+    }
+    room?.participants?.forEach((participant) => participants.push(participant));
+    return participants;
+  }
+
+  function refreshVoiceParticipants() {
+    if (!livekitRoom) return;
+    renderVoiceParticipants(collectParticipants(livekitRoom));
+  }
+
+  function cleanupLivekit() {
+    if (localAudioTrack) {
+      localAudioTrack.stop();
+      localAudioTrack = null;
+    }
+    if (livekitRoom) {
+      livekitRoom.disconnect();
+      livekitRoom = null;
+    }
+    voiceAudio.innerHTML = "";
+    renderVoiceMembers([]);
+    updateJoinButton(false);
+  }
+
+  async function connectLivekit() {
+    if (!currentUser || !activeServerId || livekitRoom || isConnecting) return;
+    isConnecting = true;
+    try {
+      const response = await http("/api/livekit/token", {
+        method: "POST",
+        body: {
+          room: activeServerId,
+          identity: currentUser.uid,
+          name: currentUser.displayName || currentUser.email || "Kullanici",
+        },
+      });
+      const room = new Room({ adaptiveStream: true, dynacast: true });
+      livekitRoom = room;
+
+      room.on(RoomEvent.ParticipantConnected, refreshVoiceParticipants);
+      room.on(RoomEvent.ParticipantDisconnected, refreshVoiceParticipants);
+      room.on(RoomEvent.Disconnected, () => {
+        cleanupLivekit();
+      });
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === "audio") {
+          attachTrack(track);
+        }
+      });
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        if (track.kind === "audio") {
+          detachTrack(track);
+        }
+      });
+
+      await room.connect(response.url, response.token);
+      localAudioTrack = await createLocalAudioTrack();
+      await room.localParticipant.publishTrack(localAudioTrack);
+      localAudioTrack.setEnabled(micEnabled);
+      updateJoinButton(true);
+      updateMicButton(micEnabled);
+      refreshVoiceParticipants();
+    } catch (error) {
+      showToast(error?.message || "Sesli sohbet baslatilamadi.");
+      cleanupLivekit();
+    } finally {
+      isConnecting = false;
+    }
+  }
+
   function setActiveServer(serverId) {
     if (activeServerId === serverId) return;
     activeServerId = serverId;
+    if (livekitRoom) {
+      cleanupLivekit();
+    }
     updateServerMeta();
     renderTabs();
     clearChat();
@@ -443,21 +580,19 @@ export function Servers(root) {
   });
 
   micBtn.addEventListener("click", () => {
-    micBtn.classList.toggle("active");
-    const icon = micBtn.querySelector(".icon");
-    const text = micBtn.querySelector("span:last-child");
-    const active = micBtn.classList.contains("active");
-    icon.textContent = active ? "ON" : "MIC";
-    text.textContent = active ? "Mikrofon Acik" : "Mikrofon";
+    micEnabled = !micEnabled;
+    updateMicButton(micEnabled);
+    if (localAudioTrack) {
+      localAudioTrack.setEnabled(micEnabled);
+    }
   });
 
-  joinBtn.addEventListener("click", () => {
-    joinBtn.classList.toggle("active");
-    const icon = joinBtn.querySelector(".icon");
-    const text = joinBtn.querySelector("span:last-child");
-    const active = joinBtn.classList.contains("active");
-    icon.textContent = active ? "CALL" : "EXIT";
-    text.textContent = active ? "Sesli Odadan Ayril" : "Sesli Odaya Katil";
+  joinBtn.addEventListener("click", async () => {
+    if (livekitRoom) {
+      cleanupLivekit();
+      return;
+    }
+    await connectLivekit();
   });
 
   volumeSlider.addEventListener("input", async (event) => {
@@ -515,6 +650,7 @@ export function Servers(root) {
     if (stopServers) stopServers();
     stopServers = null;
     stopActiveListeners();
+    cleanupLivekit();
     servers = [];
     activeServerId = "";
     renderTabs();
