@@ -402,7 +402,10 @@ export function Servers(root) {
     if (!currentUser || !activeServerId || livekitRoom || isConnecting) return;
     isConnecting = true;
     try {
-      const response = await http("/api/livekit/token", {
+      const tokenUrl =
+        import.meta.env.VITE_LIVEKIT_TOKEN_URL ||
+        "https://us-central1-pikaresk-7f80b.cloudfunctions.net/livekitToken";
+      const response = await http(tokenUrl, {
         method: "POST",
         body: {
           room: activeServerId,
