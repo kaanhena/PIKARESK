@@ -16,10 +16,12 @@ export function buildThreadId(uidA, uidB) {
 export async function sendMessage({ fromUid, toUid, text }) {
   if (!fromUid || !toUid || !text) return null;
   const threadId = buildThreadId(fromUid, toUid);
+  const participants = [fromUid, toUid];
   const payload = {
     threadId,
     fromUid,
     toUid,
+    participants,
     text,
     createdAt: serverTimestamp(),
   };
@@ -27,12 +29,13 @@ export async function sendMessage({ fromUid, toUid, text }) {
   return { id: ref.id, ...payload };
 }
 
-export function listenThreadMessages(threadId, onChange, onError) {
-  if (!threadId) return () => {};
+export function listenThreadMessages(threadId, uid, onChange, onError) {
+  if (!threadId || !uid) return () => {};
   const messagesRef = collection(db, "messages");
   const q = query(
     messagesRef,
     where("threadId", "==", threadId),
+    where("participants", "array-contains", uid),
     orderBy("createdAt", "asc")
   );
   return onSnapshot(

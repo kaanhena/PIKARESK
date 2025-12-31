@@ -137,6 +137,7 @@ export default function DM(root) {
       const threadId = buildThreadId(currentUser.uid, activeUser);
       stopThread = listenThreadMessages(
         threadId,
+        currentUser.uid,
         (items) => {
           threadMessages = items;
           renderMessages();
