@@ -444,7 +444,9 @@ export function Servers(root) {
       await room.connect(response.url, response.token);
       localAudioTrack = await createLocalAudioTrack();
       await room.localParticipant.publishTrack(localAudioTrack);
-      localAudioTrack.setEnabled(micEnabled);
+      if (!micEnabled) {
+        await localAudioTrack.mute();
+      }
       updateJoinButton(true);
       updateMicButton(micEnabled);
       refreshVoiceParticipants();
@@ -596,7 +598,11 @@ export function Servers(root) {
     micEnabled = !micEnabled;
     updateMicButton(micEnabled);
     if (localAudioTrack) {
-      localAudioTrack.setEnabled(micEnabled);
+      if (micEnabled) {
+        localAudioTrack.unmute();
+      } else {
+        localAudioTrack.mute();
+      }
     }
   });
 
