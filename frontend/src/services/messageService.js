@@ -27,7 +27,7 @@ export async function sendMessage({ fromUid, toUid, text }) {
   return { id: ref.id, ...payload };
 }
 
-export function listenThreadMessages(threadId, onChange) {
+export function listenThreadMessages(threadId, onChange, onError) {
   if (!threadId) return () => {};
   const messagesRef = collection(db, "messages");
   const q = query(
@@ -35,11 +35,17 @@ export function listenThreadMessages(threadId, onChange) {
     where("threadId", "==", threadId),
     orderBy("createdAt", "asc")
   );
-  return onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map((docSnap) => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
-    onChange(items);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const items = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+      onChange(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }

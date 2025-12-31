@@ -266,10 +266,16 @@ export function Header(root, { title = "PIKARESK", onLogout } = {}) {
       return;
     }
     currentUid = user.uid;
-    stopNotifications = listenNotifications(user.uid, (items) => {
-      lastNotifications = items;
-      renderNotifications(items);
-    });
+    stopNotifications = listenNotifications(
+      user.uid,
+      (items) => {
+        lastNotifications = items;
+        renderNotifications(items);
+      },
+      (error) => {
+        console.warn("Notifications listener error:", error?.code || error);
+      }
+    );
   });
 
   notifyBtn?.addEventListener("click", () => setNotifyPanel(true));

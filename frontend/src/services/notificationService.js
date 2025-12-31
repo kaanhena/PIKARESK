@@ -31,7 +31,7 @@ export async function createNotification({ toUid, type, title, body, meta = {} }
   return { id: ref.id, ...payload };
 }
 
-export function listenNotifications(uid, onChange, maxResults = 20) {
+export function listenNotifications(uid, onChange, onError, maxResults = 20) {
   const notificationsRef = collection(db, "notifications");
   const q = query(
     notificationsRef,
@@ -39,13 +39,19 @@ export function listenNotifications(uid, onChange, maxResults = 20) {
     orderBy("createdAt", "desc"),
     limit(maxResults)
   );
-  return onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map((docSnap) => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
-    onChange(items);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const items = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+      onChange(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }
 
 export async function markNotificationRead(id) {

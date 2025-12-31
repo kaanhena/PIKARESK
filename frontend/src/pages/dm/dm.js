@@ -57,6 +57,15 @@ export default function DM(root) {
   let stopThread = null;
   let threadMessages = [];
 
+  function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast-notification show";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.remove("show"), 1600);
+    setTimeout(() => toast.remove(), 2000);
+  }
+
   function getFilteredFriends(search) {
     const s = (search || "").toLowerCase().trim();
     return friends.filter((f) => !s || f.name.toLowerCase().includes(s));
@@ -126,10 +135,17 @@ export default function DM(root) {
     }
     if (currentUser && activeUser) {
       const threadId = buildThreadId(currentUser.uid, activeUser);
-      stopThread = listenThreadMessages(threadId, (items) => {
-        threadMessages = items;
-        renderMessages();
-      });
+      stopThread = listenThreadMessages(
+        threadId,
+        (items) => {
+          threadMessages = items;
+          renderMessages();
+        },
+        (error) => {
+          console.warn("DM listener error:", error?.code || error);
+          showToast("Mesajlar yuklenemedi.");
+        }
+      );
     } else {
       threadMessages = [];
       renderMessages();
