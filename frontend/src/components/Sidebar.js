@@ -1,4 +1,4 @@
-// src/components/Sidebar.js
+﻿// src/components/Sidebar.js
 
 const sections = [
   {
@@ -11,7 +11,7 @@ const sections = [
   {
     title: "SOSYAL",
     items: [
-      { key: "friends", label: "Arkadaşlar" },
+      { key: "friends", label: "ArkadaÅŸlar" },
       { key: "dm", label: "DM" }
     ]
   },
@@ -19,12 +19,12 @@ const sections = [
     title: "PLATFORM",
     items: [
       { key: "servers", label: "Sunucular" },
-      { key: "games", label: "Oyunlar" },
+      { key: "games", label: "Oyun Merkezi" },
       { key: "market", label: "E-Pin Market" }
     ]
   },
   {
-    title: "SİSTEM",
+    title: "SÄ°STEM",
     items: [
       { key: "settings", label: "Ayarlar" }
     ]
@@ -78,7 +78,7 @@ export function Sidebar(root, { active = "home", onNavigate } = {}) {
   });
 }
 
-/* INLINE CSS (şimdilik burada, sonra ayrı dosyaya taşırız) */
+/* INLINE CSS (ÅŸimdilik burada, sonra ayrÄ± dosyaya taÅŸÄ±rÄ±z) */
 const style = document.createElement("style");
 style.textContent = `
 .sidebar {

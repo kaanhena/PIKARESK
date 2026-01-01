@@ -259,6 +259,25 @@
   transition: all 0.3s ease;
 }
 
+.settings-input-sm {
+  width: 120px;
+  margin-top: 0;
+}
+
+.settings-inline-status {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.settings-inline-status[data-tone="success"] {
+  color: #34d399;
+}
+
+.settings-inline-status[data-tone="error"] {
+  color: #f87171;
+}
+
 .settings-input:focus {
   outline: none;
   border-color: #00ffff;
@@ -267,6 +286,15 @@
 
 .settings-input::placeholder {
   color: #64748b;
+}
+
+input[type="color"] {
+  width: 60px;
+  height: 40px;
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  background: transparent;
 }
 
 .settings-button {
@@ -361,6 +389,7 @@
 .avatar-actions {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .settings-content::-webkit-scrollbar {

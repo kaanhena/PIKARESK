@@ -1,9 +1,6 @@
-const STORAGE_KEY = "pikaresk_settings";
+﻿const STORAGE_KEY = "pikaresk_settings";
 
-const DEFAULT_SETTINGS = {
-  displayName: "PikaBoy",
-  bio: "Oyun oynamayı seven bir geliştirici",
-  bannerColor: "#ff00e6",
+export const DEFAULT_SETTINGS = {
   theme: "neon",
   fontScale: 16,
   neonGlow: true,
@@ -18,27 +15,52 @@ const DEFAULT_SETTINGS = {
   emailFriendRequest: false,
   emailMessages: false,
   language: "tr",
-  timezone: "GMT+3",
-  showFPS: true,
-  showPing: true,
-  richPresence: true,
-  overlayEnabled: true,
-  overlayPosition: "top-right",
-  overlayNotifications: true,
-  twoFactor: false
+  timezone: "GMT+3"
 };
+
+let cachedSettings = { ...DEFAULT_SETTINGS };
+const subscribers = new Set();
+
+export function normalizeSettings(settings = {}) {
+  return { ...DEFAULT_SETTINGS, ...(settings || {}) };
+}
 
 export function loadSettings() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    return { ...DEFAULT_SETTINGS, ...data };
+    cachedSettings = normalizeSettings(data);
+    return cachedSettings;
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    cachedSettings = normalizeSettings({});
+    return cachedSettings;
   }
 }
 
+export function getSettings() {
+  return cachedSettings;
+}
+
 export function saveSettings(settings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  return setSettings(settings, { persist: true });
+}
+
+export function setSettings(settings, { persist = true } = {}) {
+  cachedSettings = normalizeSettings(settings);
+  if (persist) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedSettings));
+  }
+  applySettings(cachedSettings);
+  subscribers.forEach((cb) => cb(cachedSettings));
+  return cachedSettings;
+}
+
+export function updateSettings(partial, options) {
+  return setSettings({ ...cachedSettings, ...partial }, options);
+}
+
+export function subscribeSettings(cb) {
+  subscribers.add(cb);
+  return () => subscribers.delete(cb);
 }
 
 export function applySettings(settings) {
@@ -50,6 +72,7 @@ export function applySettings(settings) {
   );
   document.body.dataset.theme = settings.theme || "neon";
   document.body.classList.toggle("no-animations", !settings.animations);
+  document.body.dataset.neon = settings.neonGlow ? "on" : "off";
 }
 
 export function applyStoredSettings() {

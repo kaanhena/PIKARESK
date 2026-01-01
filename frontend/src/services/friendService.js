@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { createNotification } from "./notificationService.js";
+import { fetchUserSettings } from "./settingsService.js";
 
 function normalize(text) {
   return (text || "").toLowerCase().trim();
@@ -63,6 +64,10 @@ export async function fetchFriendRequests(uid) {
 }
 
 export async function sendFriendRequest(fromUser, toUser) {
+  const targetSettings = await fetchUserSettings(toUser.id);
+  if (targetSettings.friendRequests === false) {
+    throw new Error("Bu kullanıcı arkadaşlık isteği kabul etmiyor.");
+  }
   const requestsRef = collection(db, "friendRequests");
   const existingOutgoing = query(
     requestsRef,

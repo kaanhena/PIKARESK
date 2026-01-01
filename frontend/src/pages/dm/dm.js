@@ -1,7 +1,7 @@
 ﻿import "./dm.css";
 import { watchAuth } from "../../services/authService.js";
 import { fetchAcceptedFriends } from "../../services/friendService.js";
-import { loadSettings, saveSettings } from "../../utils/settings.js";
+import { getSettings, subscribeSettings, updateSettings } from "../../utils/settings.js";
 import {
   buildThreadId,
   listenThreadMessages,
@@ -9,6 +9,7 @@ import {
   markThreadRead,
   sendMessage,
 } from "../../services/messageService.js";
+import { updateUserSettings } from "../../services/settingsService.js";
 
 const ACTIVE_DM_KEY = "pikaresk_active_dm";
 const ACTIVE_DM_NAME_KEY = "pikaresk_active_dm_name";
@@ -103,7 +104,8 @@ export default function DM(root) {
   let pendingAttachment = null;
   let lastMessageId = "";
   let hasLoadedThread = false;
-  let settings = loadSettings();
+  let settings = getSettings();
+  let stopSettings = null;
 
   function showToast(message) {
     const toast = document.createElement("div");
@@ -317,8 +319,8 @@ export default function DM(root) {
         text,
         attachment,
       });
-    } catch {
-      // swallow errors for now
+    } catch (error) {
+      showToast(error?.message || "Mesaj gonderilemedi.");
     }
   }
 
@@ -376,9 +378,12 @@ export default function DM(root) {
   });
 
   soundToggleBtn.addEventListener("click", () => {
-    settings = { ...settings, messageSound: !settings.messageSound };
-    saveSettings(settings);
+    const nextValue = !settings.messageSound;
+    settings = updateSettings({ messageSound: nextValue });
     updateSoundButton();
+    if (currentUser?.uid) {
+      updateUserSettings(currentUser.uid, { messageSound: nextValue }).catch(() => {});
+    }
   });
 
   searchEl.addEventListener("input", renderContacts);
@@ -387,8 +392,13 @@ export default function DM(root) {
 
   watchAuth((user) => {
     currentUser = user;
-    settings = loadSettings();
+    settings = getSettings();
     updateSoundButton();
+    if (stopSettings) stopSettings();
+    stopSettings = subscribeSettings((nextSettings) => {
+      settings = nextSettings;
+      updateSoundButton();
+    });
     if (!user) {
       friends = [];
       messageSummary = {};

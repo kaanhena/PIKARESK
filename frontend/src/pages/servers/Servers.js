@@ -5,11 +5,14 @@ import { http } from "../../services/http.js";
 import {
   createInvite,
   createServerForUser,
+  deleteServer,
+  listenServerPresence,
   joinServerByInvite,
-  listenServerMembers,
   listenServerMessages,
   listenUserServers,
   loadVoiceSettings,
+  markServerMessagesRead,
+  upsertServerPresence,
   saveVoiceSettings,
   sendServerMessage,
 } from "../../services/serverService.js";
@@ -48,6 +51,65 @@ export function Servers(root) {
               <span>Ses Ayarlari</span>
             </button>
             <div class="voice-settings" id="voiceSettings">
+              <div class="setting-section-title">Sunucu Ayarlari</div>
+              <div class="setting-item">
+                <div class="setting-label">
+                  <span>Ses Efekti</span>
+                </div>
+                <select class="servers-select" id="voiceEffectSelect">
+                  <option value="card-1">Dalga Efekti</option>
+                  <option value="card-2">Ses Cubuklari</option>
+                  <option value="card-3">Genisleyen Daire</option>
+                  <option value="card-4">Parcacik Patlamasi</option>
+                  <option value="card-5">Isiltili Parilti</option>
+                  <option value="card-6">Radar Tarama</option>
+                  <option value="card-7">Cift Sarmal</option>
+                  <option value="card-8">Ses Dalgasi</option>
+                  <option value="card-9">Neon Nabiz</option>
+                  <option value="card-10">Geometrik Sekil</option>
+                  <option value="card-11">Enerji Kalkani</option>
+                  <option value="card-12">Dijital Yagmur</option>
+                  <option value="card-13">Hologram Glitch</option>
+                  <option value="card-14">Plazma Topu</option>
+                  <option value="card-15">Kuantum Akisi</option>
+                  <option value="card-16">Sarmal Dalga</option>
+                  <option value="card-17">Sonik Patlama</option>
+                  <option value="card-18">Yildiz Takimyildizi</option>
+                  <option value="card-19">Frekans Barlari</option>
+                  <option value="card-20">Binary Kod</option>
+                  <option value="card-21">Kristal Yansima</option>
+                  <option value="card-22">Manyetik Alan</option>
+                  <option value="card-23">Lazer Isini</option>
+                  <option value="card-24">Kuyruklu Yildiz</option>
+                  <option value="card-25">Dalgalanma</option>
+                  <option value="card-26">Pixel Firtinasi</option>
+                  <option value="card-27">Kuzey Isiklari</option>
+                  <option value="card-28">Elektrik Kivilcimi</option>
+                  <option value="card-29">Girdap Donusu</option>
+                  <option value="card-30">Sinyal Kulesi</option>
+                  <option value="card-31">Altigen Izgara</option>
+                  <option value="card-32">Sarkac Salinimi</option>
+                  <option value="card-33">Siber Devre</option>
+                  <option value="card-34">Nefes Isigi</option>
+                  <option value="card-35">Uydu Yorungesi</option>
+                  <option value="card-36">Ates Titremesi</option>
+                  <option value="card-37">DNA Ipligi</option>
+                  <option value="card-38">Spektrum Analiz</option>
+                  <option value="card-39">Yercekimi Kuyusu</option>
+                  <option value="card-40">Mors Kodu</option>
+                  <option value="card-41">Balon Patlamasi</option>
+                  <option value="card-42">Wifi Sinyali</option>
+                  <option value="card-43">Prizma Ayrisimi</option>
+                  <option value="card-44">Sok Dalgasi</option>
+                  <option value="card-45">Sonar Pingi</option>
+                  <option value="card-46">Enerji Cekirdegi</option>
+                  <option value="card-47">Zaman Catlagi</option>
+                  <option value="card-48">Foton Isini</option>
+                  <option value="card-49">Rezonans</option>
+                  <option value="card-50">Kozmik Toz</option>
+                </select>
+              </div>
+              <div class="setting-section-title">Ses Ayarlari</div>
               <div class="setting-item">
                 <div class="setting-label">
                   <span>Ses Seviyesi</span>
@@ -83,6 +145,7 @@ export function Servers(root) {
             <h3 class="chat-title" id="chatTitle">Genel Sohbet</h3>
             <div class="chat-actions">
               <button class="chat-action-btn" id="inviteBtn" type="button">Davet Et</button>
+              <button class="chat-action-btn danger" id="deleteServerBtn" type="button">Sunucuyu Sil</button>
             </div>
           </div>
           <div class="chat-messages" id="messages">
@@ -136,11 +199,24 @@ export function Servers(root) {
         </div>
       </div>
     </div>
+
+    <div class="servers-modal" id="deleteServerModal" aria-hidden="true">
+      <div class="servers-modal-backdrop" data-close="delete"></div>
+      <div class="servers-modal-card">
+        <h3>Sunucuyu Sil</h3>
+        <p id="deleteServerDesc">Bu islem geri alinmaz.</p>
+        <div class="servers-modal-actions">
+          <button class="ghost-btn" data-close="delete" type="button">Vazgec</button>
+          <button class="primary-btn danger" id="confirmDeleteServerBtn" type="button">Sil</button>
+        </div>
+      </div>
+    </div>
   `;
 
   const serverTabs = root.querySelector("#serverTabs");
   const addServerBtn = root.querySelector("#addServerBtn");
   const inviteBtn = root.querySelector("#inviteBtn");
+  const deleteServerBtn = root.querySelector("#deleteServerBtn");
   const serverTitle = root.querySelector("#serverTitle");
   const serverSubtitle = root.querySelector("#serverSubtitle");
   const chatTitle = root.querySelector("#chatTitle");
@@ -151,6 +227,7 @@ export function Servers(root) {
 
   const addServerModal = root.querySelector("#addServerModal");
   const inviteModal = root.querySelector("#inviteModal");
+  const deleteServerModal = root.querySelector("#deleteServerModal");
   const serverNameInput = root.querySelector("#serverNameInput");
   const createServerBtn = root.querySelector("#createServerBtn");
   const inviteCodeInput = root.querySelector("#inviteCodeInput");
@@ -159,8 +236,10 @@ export function Servers(root) {
   const inviteEmailInput = root.querySelector("#inviteEmailInput");
   const inviteCode = root.querySelector("#inviteCode");
   const inviteDesc = root.querySelector("#inviteDesc");
+  const deleteServerDesc = root.querySelector("#deleteServerDesc");
   const copyInviteBtn = root.querySelector("#copyInviteBtn");
   const sendInviteBtn = root.querySelector("#sendInviteBtn");
+  const confirmDeleteServerBtn = root.querySelector("#confirmDeleteServerBtn");
 
   const micBtn = root.querySelector("#micBtn");
   const joinBtn = root.querySelector("#joinBtn");
@@ -172,6 +251,7 @@ export function Servers(root) {
   const sensitivityValue = root.querySelector("#sensitivityValue");
   const noiseToggle = root.querySelector("#noiseToggle");
   const echoToggle = root.querySelector("#echoToggle");
+  const voiceEffectSelect = root.querySelector("#voiceEffectSelect");
 
   const input = root.querySelector("#input");
   const sendBtn = root.querySelector("#sendBtn");
@@ -179,14 +259,28 @@ export function Servers(root) {
   let currentUser = null;
   let servers = [];
   let activeServerId = "";
+  let pendingDeleteServerId = "";
   let stopServers = null;
   let stopMembers = null;
   let stopMessages = null;
-  let voiceConfig = { volume: 70, sensitivity: 50, noise: false, echo: false };
+  let stopPresence = null;
+  let presenceTimer = null;
+  let lastPresenceMembers = [];
+  let lastPresenceSignature = "";
+  const PRESENCE_PING_MS = 20000;
+  const PRESENCE_ACTIVE_MS = 60000;
+  let voiceConfig = {
+    volume: 70,
+    sensitivity: 50,
+    noise: false,
+    echo: false,
+    voiceEffect: "card-27",
+  };
   let livekitRoom = null;
   let localAudioTrack = null;
   let isConnecting = false;
   let micEnabled = true;
+  let speakingIds = new Set();
 
   function showToast(message) {
     const toast = document.createElement("div");
@@ -195,6 +289,12 @@ export function Servers(root) {
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.remove("show"), 1600);
     setTimeout(() => toast.remove(), 2000);
+  }
+
+  function handleFirestoreError(error, fallback) {
+    console.warn(fallback, error);
+    const message = error?.message || fallback;
+    showToast(message);
   }
 
   function openModal(modal) {
@@ -214,6 +314,13 @@ export function Servers(root) {
     sensitivityValue.textContent = `${settings.sensitivity}%`;
     noiseToggle.classList.toggle("active", settings.noise);
     echoToggle.classList.toggle("active", settings.echo);
+    const effect = settings.voiceEffect || "card-27";
+    if (voiceEffectSelect) {
+      voiceEffectSelect.value = effect;
+    }
+    if (voiceList) {
+      voiceList.dataset.effect = effect;
+    }
   }
 
   function renderTabs() {
@@ -227,6 +334,10 @@ export function Servers(root) {
       joinBtn.disabled = true;
       input.disabled = true;
       sendBtn.disabled = true;
+      if (deleteServerBtn) {
+        deleteServerBtn.style.display = "none";
+        deleteServerBtn.disabled = true;
+      }
       return;
     }
     inviteBtn.disabled = false;
@@ -252,54 +363,76 @@ export function Servers(root) {
     serverTitle.textContent = server.name;
     chatTitle.textContent = `${server.name} Sohbet`;
     inviteDesc.textContent = `${server.name} sunucusuna davet linki olustur.`;
+    if (deleteServerBtn) {
+      const canDelete = currentUser && server.ownerId === currentUser.uid;
+      deleteServerBtn.style.display = canDelete ? "" : "none";
+      deleteServerBtn.disabled = !canDelete;
+    }
   }
 
   function renderVoiceMembers(members) {
-    if (livekitRoom) return;
     if (!members.length) {
       voiceList.innerHTML = `<div class="voice-empty">Sesli odada kimse yok.</div>`;
       serverSubtitle.textContent = "0 kisi cevrimici";
       return;
     }
     serverSubtitle.textContent = `${members.length} kisi cevrimici`;
-    voiceList.innerHTML = members
+    const sorted = [...members].sort((a, b) => {
+      const nameA = (a.userName || "").toLowerCase();
+      const nameB = (b.userName || "").toLowerCase();
+      return nameA.localeCompare(nameB, "tr");
+    });
+    voiceList.innerHTML = sorted
       .map((member) => {
         const name = member.userName || "Kullanici";
         const initial = name[0]?.toUpperCase() || "K";
+        const status = member.voice ? "Dinliyor" : "Cevrimici";
         return `
-          <div class="voice-user">
-            <div class="voice-avatar">${initial}</div>
+          <div class="voice-user" data-user-id="${member.userId || ""}">
+            <div class="voice-avatar">
+              ${initial}
+              <span class="speaking-dot" aria-hidden="true"></span>
+            </div>
             <div>
               <div class="voice-name">${name}</div>
-              <div class="voice-status">Dinliyor</div>
+              <div class="voice-status">${status}</div>
             </div>
           </div>
         `;
       })
       .join("");
+    updateSpeakingIndicators();
+  }
+
+  function computePresenceSignature(members) {
+    return members
+      .map((member) => `${member.userId || ""}:${member.voice ? "v" : "o"}`)
+      .sort()
+      .join("|");
   }
 
   function renderVoiceParticipants(participants) {
-    if (!participants.length) {
-      renderVoiceMembers([]);
-      return;
-    }
-    serverSubtitle.textContent = `${participants.length} kisi cevrimici`;
-    voiceList.innerHTML = participants
-      .map((participant) => {
-        const name = participant.name || participant.identity || "Kullanici";
-        const initial = name[0]?.toUpperCase() || "K";
-        return `
-          <div class="voice-user">
-            <div class="voice-avatar">${initial}</div>
-            <div>
-              <div class="voice-name">${name}</div>
-              <div class="voice-status">Dinliyor</div>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+    const onlineMembers = lastPresenceMembers || [];
+    const participantsById = new Map(
+      participants.map((participant) => [participant.identity || participant.sid, participant])
+    );
+    const merged = new Map();
+
+    onlineMembers.forEach((member) => {
+      if (!member?.userId) return;
+      merged.set(member.userId, { ...member, voice: participantsById.has(member.userId) });
+    });
+
+    participantsById.forEach((participant, key) => {
+      if (merged.has(key)) return;
+      merged.set(key, {
+        userId: key,
+        userName: participant.name || participant.identity || "Kullanici",
+        voice: true,
+      });
+    });
+
+    renderVoiceMembers(Array.from(merged.values()));
   }
 
   function renderMessages(items) {
@@ -311,6 +444,9 @@ export function Servers(root) {
       .map((message) => {
         const name = message.userName || "Kullanici";
         const initial = name[0]?.toUpperCase() || "K";
+        const isOwn = message.userId && currentUser?.uid === message.userId;
+        const readByCount = Array.isArray(message.readBy) ? message.readBy.length : 0;
+        const status = isOwn ? (readByCount > 1 ? "Goruldu" : "Gonderildi") : "";
         const time =
           message.createdAt?.toDate?.().toLocaleTimeString("tr-TR", {
             hour: "2-digit",
@@ -323,6 +459,7 @@ export function Servers(root) {
               <div class="msg-header">
                 <span class="msg-author">${name}</span>
                 <span class="msg-time">${time}</span>
+                ${status ? `<span class="msg-status">${status}</span>` : ""}
               </div>
               <div class="msg-text">${message.text || ""}</div>
             </div>
@@ -342,6 +479,47 @@ export function Servers(root) {
     if (stopMessages) stopMessages();
     stopMembers = null;
     stopMessages = null;
+  }
+
+  function stopPresenceTracking() {
+    if (stopPresence) stopPresence();
+    stopPresence = null;
+    if (presenceTimer) {
+      window.clearInterval(presenceTimer);
+      presenceTimer = null;
+    }
+  }
+
+  async function setPresence(serverId, online) {
+    if (!currentUser || !serverId) return;
+    try {
+      await upsertServerPresence({
+        serverId,
+        uid: currentUser.uid,
+        userName: currentUser.displayName || currentUser.email,
+        online,
+      });
+    } catch (error) {
+      handleFirestoreError(error, "Presence guncellenemedi.");
+    }
+  }
+
+  function startPresenceTracking(serverId) {
+    if (!serverId || !currentUser) return;
+    setPresence(serverId, true);
+    presenceTimer = window.setInterval(() => {
+      setPresence(serverId, true);
+    }, PRESENCE_PING_MS);
+  }
+
+  function normalizePresence(items) {
+    const now = Date.now();
+    return items.filter((item) => {
+      if (!item?.online) return false;
+      const ts = item.lastSeen?.toDate?.();
+      if (!ts) return false;
+      return now - ts.getTime() <= PRESENCE_ACTIVE_MS;
+    });
   }
 
   function updateJoinButton(connected) {
@@ -384,6 +562,14 @@ export function Servers(root) {
     renderVoiceParticipants(collectParticipants(livekitRoom));
   }
 
+  function updateSpeakingIndicators() {
+    if (!voiceList) return;
+    voiceList.querySelectorAll(".voice-user").forEach((item) => {
+      const uid = item.getAttribute("data-user-id");
+      item.classList.toggle("speaking", !!uid && speakingIds.has(uid));
+    });
+  }
+
   function cleanupLivekit() {
     if (localAudioTrack) {
       localAudioTrack.stop();
@@ -394,6 +580,7 @@ export function Servers(root) {
       livekitRoom = null;
     }
     voiceAudio.innerHTML = "";
+    speakingIds = new Set();
     renderVoiceMembers([]);
     updateJoinButton(false);
   }
@@ -418,6 +605,11 @@ export function Servers(root) {
 
       room.on(RoomEvent.ParticipantConnected, refreshVoiceParticipants);
       room.on(RoomEvent.ParticipantDisconnected, refreshVoiceParticipants);
+      room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+        const ids = speakers.map((speaker) => speaker.identity).filter(Boolean);
+        speakingIds = new Set(ids);
+        updateSpeakingIndicators();
+      });
       room.on(RoomEvent.ConnectionStateChanged, (state) => {
         console.log("LiveKit state:", state);
       });
@@ -460,8 +652,16 @@ export function Servers(root) {
   }
 
   function setActiveServer(serverId) {
-    if (activeServerId === serverId) return;
+    if (!serverId) return;
+    if (activeServerId === serverId) {
+      updateServerMeta();
+      return;
+    }
+    const previousServerId = activeServerId;
     activeServerId = serverId;
+    if (previousServerId) {
+      setPresence(previousServerId, false);
+    }
     if (livekitRoom) {
       cleanupLivekit();
     }
@@ -469,25 +669,46 @@ export function Servers(root) {
     renderTabs();
     clearChat();
     stopActiveListeners();
-    if (!activeServerId) return;
-    stopMembers = listenServerMembers(
+    stopPresenceTracking();
+    stopPresence = listenServerPresence(
       activeServerId,
       (items) => {
-        renderVoiceMembers(items);
+        const online = normalizePresence(items);
+        lastPresenceMembers = online;
+        const signature = computePresenceSignature(online);
+        if (signature === lastPresenceSignature && !livekitRoom) return;
+        lastPresenceSignature = signature;
+        if (livekitRoom) {
+          renderVoiceParticipants(collectParticipants(livekitRoom));
+          return;
+        }
+        renderVoiceMembers(online);
       },
-      () => {
+      (error) => {
         renderVoiceMembers([]);
+        handleFirestoreError(error, "Presence verisi alinamadi.");
       }
     );
     stopMessages = listenServerMessages(
       activeServerId,
       (items) => {
         renderMessages(items);
+        if (currentUser) {
+          markServerMessagesRead({
+            serverId: activeServerId,
+            uid: currentUser.uid,
+            items,
+          }).catch((error) => {
+            handleFirestoreError(error, "Mesajlar okunamadi.");
+          });
+        }
       },
-      () => {
+      (error) => {
         clearChat();
+        handleFirestoreError(error, "Mesajlar alinamadi.");
       }
     );
+    startPresenceTracking(activeServerId);
   }
 
   function updateServerLimitHint() {
@@ -568,6 +789,31 @@ export function Servers(root) {
     }
   });
 
+  deleteServerBtn?.addEventListener("click", async () => {
+    if (!activeServerId || !currentUser) return;
+    const server = servers.find((item) => item.id === activeServerId);
+    if (!server || server.ownerId !== currentUser.uid) return;
+    pendingDeleteServerId = activeServerId;
+    if (deleteServerDesc) {
+      deleteServerDesc.textContent = `${server.name} sunucusu kalici olarak silinecek.`;
+    }
+    openModal(deleteServerModal);
+  });
+
+  confirmDeleteServerBtn?.addEventListener("click", async () => {
+    if (!pendingDeleteServerId || !currentUser) return;
+    try {
+      const token = await currentUser.getIdToken();
+      await deleteServer({ serverId: pendingDeleteServerId, token });
+      cleanupLivekit();
+      closeModal(deleteServerModal);
+      pendingDeleteServerId = "";
+      showToast("Sunucu silindi.");
+    } catch (error) {
+      showToast(error?.message || "Sunucu silinemedi.");
+    }
+  });
+
   copyInviteBtn.addEventListener("click", () => {
     const text = inviteCode.textContent.trim();
     if (!text || text === "---") return;
@@ -587,6 +833,10 @@ export function Servers(root) {
       const target = button.getAttribute("data-close");
       if (target === "add") closeModal(addServerModal);
       if (target === "invite") closeModal(inviteModal);
+      if (target === "delete") {
+        pendingDeleteServerId = "";
+        closeModal(deleteServerModal);
+      }
     });
   });
 
@@ -646,17 +896,31 @@ export function Servers(root) {
     }
   });
 
+  voiceEffectSelect?.addEventListener("change", async (event) => {
+    voiceConfig.voiceEffect = event.target.value;
+    if (voiceList) {
+      voiceList.dataset.effect = voiceConfig.voiceEffect;
+    }
+    if (currentUser) {
+      await saveVoiceSettings(currentUser.uid, voiceConfig);
+    }
+  });
+
   async function sendMessage() {
     if (!activeServerId || !currentUser) return;
     const text = input.value.trim();
     if (!text) return;
-    await sendServerMessage({
-      serverId: activeServerId,
-      uid: currentUser.uid,
-      userName: currentUser.displayName || currentUser.email,
-      text,
-    });
-    input.value = "";
+    try {
+      await sendServerMessage({
+        serverId: activeServerId,
+        uid: currentUser.uid,
+        userName: currentUser.displayName || currentUser.email,
+        text,
+      });
+      input.value = "";
+    } catch (error) {
+      handleFirestoreError(error, "Mesaj gonderilemedi.");
+    }
   }
 
   sendBtn.addEventListener("click", sendMessage);
@@ -664,11 +928,30 @@ export function Servers(root) {
     if (event.key === "Enter") sendMessage();
   });
 
+  window.addEventListener("beforeunload", () => {
+    if (activeServerId) {
+      setPresence(activeServerId, false);
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!activeServerId || !currentUser) return;
+    if (document.hidden) {
+      setPresence(activeServerId, false);
+      return;
+    }
+    setPresence(activeServerId, true);
+  });
+
   watchAuth((user) => {
     currentUser = user;
     if (stopServers) stopServers();
     stopServers = null;
     stopActiveListeners();
+    if (activeServerId) {
+      setPresence(activeServerId, false);
+    }
+    stopPresenceTracking();
     cleanupLivekit();
     servers = [];
     activeServerId = "";
@@ -677,6 +960,7 @@ export function Servers(root) {
     clearChat();
     if (!user) return;
 
+    applyVoiceSettings(voiceConfig);
     loadVoiceSettings(user.uid)
       .then((settings) => {
         if (settings) {
@@ -685,6 +969,7 @@ export function Servers(root) {
             sensitivity: settings.sensitivity ?? 50,
             noise: !!settings.noise,
             echo: !!settings.echo,
+            voiceEffect: settings.voiceEffect || "card-27",
           };
           applyVoiceSettings(voiceConfig);
         }
@@ -702,11 +987,12 @@ export function Servers(root) {
           clearChat();
           return;
         }
-        if (!activeServerId || !servers.some((server) => server.id === activeServerId)) {
-          activeServerId = servers[0].id;
-        }
+        const nextServerId =
+          activeServerId && servers.some((server) => server.id === activeServerId)
+            ? activeServerId
+            : servers[0].id;
         renderTabs();
-        setActiveServer(activeServerId);
+        setActiveServer(nextServerId);
         updateServerLimitHint();
       },
       () => {

@@ -1,20 +1,24 @@
 import {
   addDoc,
+  arrayUnion,
   collection,
   doc,
   documentId,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
   where,
   writeBatch,
   limit,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { http } from "./http.js";
 
 const SERVERS_COLLECTION = "servers";
 const MEMBERS_COLLECTION = "serverMembers";
@@ -56,6 +60,8 @@ export async function createServerForUser({ uid, name, userName }) {
     role: "owner",
     userName: userName || "Kullanici",
     joinedAt: now,
+    online: true,
+    lastSeen: now,
   });
   batch.set(userServerRef, {
     serverId: serverRef.id,
@@ -176,6 +182,8 @@ export async function joinServerByInvite({ code, uid, userName }) {
       role: "member",
       userName: userName || "Kullanici",
       joinedAt: serverTimestamp(),
+      online: true,
+      lastSeen: serverTimestamp(),
     },
     { merge: true }
   );
@@ -214,10 +222,29 @@ export async function sendServerMessage({ serverId, uid, userName, text }) {
     userId: uid,
     userName: userName || "Kullanici",
     text: messageText,
-    createdAt: serverTimestamp(),
+    createdAt: Timestamp.now(),
+    createdAtServer: serverTimestamp(),
+    readBy: [uid],
   };
   const ref = await addDoc(collection(db, MESSAGES_COLLECTION), payload);
   return { id: ref.id, ...payload };
+}
+
+export async function markServerMessagesRead({ serverId, uid, items }) {
+  if (!serverId || !uid || !Array.isArray(items) || !items.length) return;
+  const unread = items.filter(
+    (message) =>
+      message.serverId === serverId &&
+      message.userId !== uid &&
+      !message.readBy?.includes?.(uid)
+  );
+  if (!unread.length) return;
+  const batch = writeBatch(db);
+  unread.forEach((message) => {
+    const ref = doc(db, MESSAGES_COLLECTION, message.id);
+    batch.update(ref, { readBy: arrayUnion(uid) });
+  });
+  await batch.commit();
 }
 
 export async function loadVoiceSettings(uid) {
@@ -238,4 +265,32 @@ export async function updateServerActivity(serverId) {
   if (!serverId) return;
   const ref = doc(db, SERVERS_COLLECTION, serverId);
   await updateDoc(ref, { updatedAt: serverTimestamp() });
+}
+
+export function listenServerPresence(serverId, onChange, onError) {
+  return listenServerMembers(serverId, onChange, onError);
+}
+
+export async function upsertServerPresence({ serverId, uid, userName, online }) {
+  if (!serverId || !uid) return;
+  const ref = doc(db, MEMBERS_COLLECTION, `${serverId}_${uid}`);
+  await setDoc(
+    ref,
+    {
+      serverId,
+      userId: uid,
+      userName: userName || "Kullanici",
+      online: !!online,
+      lastSeen: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function deleteServer({ serverId, token }) {
+  if (!serverId || !token) throw new Error("Eksik bilgi.");
+  return http(`/api/servers/${serverId}/delete`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
